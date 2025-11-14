@@ -1,0 +1,41 @@
+// /api/chat.js
+// In-memory chat (non-persistent across cold restarts)
+let messages = []; // array of { name, msg, at }
+const lastPost = new Map(); // ip -> timestamp ms
+
+const RATE_MS = 1500; // 1.5s between posts per IP
+const MAX_MESSAGES = 500;
+
+function getIP(req){
+  return req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+}
+
+export default async function handler(req, res) {
+  try {
+    if (req.method === 'POST') {
+      const { name, msg } = req.body || {};
+      if (!msg || typeof msg !== 'string') return res.status(400).json({ error: 'Missing message' });
+      const ip = getIP(req);
+      const now = Date.now();
+      const last = lastPost.get(ip) || 0;
+      if (now - last < RATE_MS) return res.status(429).json({ error: 'Rate limit' });
+      lastPost.set(ip, now);
+      const entry = { name: String(name || 'Anon').slice(0,30), msg: String(msg).slice(0,400), at: now };
+      messages.push(entry);
+      if (messages.length > MAX_MESSAGES) messages = messages.slice(-MAX_MESSAGES);
+      return res.status(200).json({ ok: true });
+    }
+
+    if (req.method === 'GET') {
+      // return up to last 200 messages (oldest first)
+      const out = messages.slice(-200);
+      return res.status(200).json(out);
+    }
+
+    res.setHeader('Allow','GET,POST');
+    return res.status(405).json({ error: 'Method not allowed' });
+  } catch(err){
+    console.error('chat error', err);
+    return res.status(500).json({ error: 'internal' });
+  }
+}
