@@ -387,8 +387,7 @@
   startBtn.addEventListener('click', ()=>{
     resetGame();
     // small UX: flip all cards briefly to show positions
-    cards.forEach(c=>c.classList.add('flipped'));
-    setTimeout(()=>cards.forEach(c=>c.classList.remove('flipped')), 900);
+    
   });
   resetBtn.addEventListener('click', ()=>{ resetGame(true); });
   shareBtn.addEventListener('click', shareResult);
@@ -416,3 +415,4 @@
 </script>
 </body>
 </html>
+
