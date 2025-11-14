@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jogo da Memória — Emoji Royale</title>
+
+<!-- Tailwind CDN (apenas para utilidades rápidas; opcional) -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  /* Fonte e reset */
+  :root{
+    --bg:#0f1724; --card:#0b1220; --accent:#7c3aed; --muted:#9aa7bf;
+    --glass: rgba(255,255,255,0.04);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;background:linear-gradient(180deg,#061021 0%, #071423 60%);color:#e6eef8;display:flex;align-items:center;justify-content:center;padding:18px}
+  .app{max-width:1100px;width:100%;display:flex;gap:18px;align-items:flex-start}
+
+  /* Left column - game */
+  .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,.6);flex:1;min-width:320px}
+  h1{font-size:20px;margin:0 0 8px 0;color:var(--accent)}
+  .sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+
+  .header-row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .controls{display:flex;gap:8px;align-items:center}
+  input[type="text"]{padding:8px;border-radius:8px;border:0;background:rgba(255,255,255,0.03);color:inherit;width:160px}
+  select{padding:8px;border-radius:8px;border:0;background:rgba(255,255,255,0.03);color:inherit}
+
+  /* board */
+  .board-wrap{display:flex;gap:18px;flex-direction:column;align-items:center}
+  .grid{display:grid;grid-template-columns:repeat(4, 86px);gap:12px;justify-content:center;background:transparent}
+  .card{width:86px;height:86px;perspective:900px;border-radius:10px;cursor:pointer}
+  .card-inner{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d;border-radius:10px}
+  .card.flipped .card-inner{transform:rotateY(180deg)}
+  .face{position:absolute;inset:0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:32px;backface-visibility:hidden;user-select:none}
+  .face.front{background:linear-gradient(135deg,#0b1220, #0f1b2a); color:#cdd9ff; font-weight:700; transform:rotateY(180deg)}
+  .face.back{background:var(--accent); color:white; font-size:28px}
+
+  /* card back variants (skins) */
+  .skin-dot .face.front{background: linear-gradient(135deg,#111827,#0b1220); background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 1px); background-size:14px 14px;}
+  .skin-lines .face.front{background: linear-gradient(135deg,#081025, #0b1630); background-image: linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size:6px 6px;}
+  .skin-plain .face.front{background:linear-gradient(135deg,#08203a,#0b1230)}
+
+  /* HUD */
+  .hud{display:flex;gap:10px;align-items:center;margin-top:12px}
+  .chip{background:var(--glass);padding:8px 10px;border-radius:999px;font-weight:600;color:var(--muted);font-size:13px}
+
+  /* leaderboard */
+  .panel-right{width:340px;min-width:260px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px;border-radius:14px;box-shadow:0 10px 30px rgba(2,6,23,.6)}
+  .leaderboard-item{display:flex;justify-content:space-between;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:8px}
+  .you{border:2px solid #ffd166;background:linear-gradient(90deg,#2b2b2b55,#ffffff07)}
+
+  /* modal */
+  .modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(2,6,23,0.6);z-index:40}
+  .modal .box{background:linear-gradient(180deg,#071423,#081826);padding:20px;border-radius:12px;text-align:center;max-width:420px}
+
+  /* confetti canvas */
+  #confettiCanvas{position:fixed;left:0;top:0;pointer-events:none;z-index:30}
+
+  /* small */
+  .muted{color:var(--muted);font-size:13px}
+  button.btn{background:linear-gradient(90deg,#7c3aed,#5b21b6);color:white;padding:10px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:700}
+  button.btn.alt{background:transparent;border:1px solid rgba(255,255,255,0.06)}
+  footer{margin-top:12px;color:var(--muted);font-size:13px;text-align:center}
+  @media(max-width:920px){.app{flex-direction:column}.panel-right{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Game Panel -->
+  <div class="panel">
+    <div class="header-row">
+      <div>
+        <h1>Jogo da Memória — Emoji Royale</h1>
+        <div class="sub">Derrote o tempo — personalize o visual — compartilhe seus recordes</div>
+      </div>
+      <div class="controls">
+        <input id="playerName" type="text" placeholder="@seunome" />
+        <select id="skinSelect" title="Skin do verso do cartão">
+          <option value="skin-dot">Padrão (punk)</option>
+          <option value="skin-lines">Linhas</option>
+          <option value="skin-plain">Sutil</option>
+        </select>
+        <button id="startBtn" class="btn">Começar</button>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div class="hud">
+        <div class="chip">Tempo: <span id="timeDisplay">00:00</span></div>
+        <div class="chip">Tentativas: <span id="attemptsDisplay">0</span></div>
+        <div class="chip">Melhor: <span id="bestDisplay">--:--</span></div>
+      </div>
+
+      <div id="grid" class="grid mt-4"></div>
+
+      <div style="margin-top:14px;display:flex;gap:8px;justify-content:center">
+        <button id="resetBtn" class="btn alt">Reiniciar</button>
+        <button id="shareBtn" class="btn">Compartilhar resultado</button>
+      </div>
+    </div>
+
+    <footer class="muted">Salvo localmente no seu navegador. Para tornar público, compartilhe o link no Instagram.</footer>
+  </div>
+
+  <!-- Right Panel: Leaderboard + dicas -->
+  <div class="panel-right">
+    <h2 style="margin:0 0 8px 0;color:var(--accent)">🏆 Ranking Local (Top 10)</h2>
+    <div id="leaderboard"></div>
+
+    <div style="margin-top:12px">
+      <h3 style="margin:0 0 6px 0;color:#cde3ff">Dicas Rápidas</h3>
+      <ul style="margin:0;padding-left:18px;color:var(--muted)">
+        <li>Use skin diferente para criar vídeos com estética nova.</li>
+        <li>Compartilhe seu melhor tempo nos Stories e marque a conta.</li>
+        <li>Faça vídeos mostrando o "antes/depois" do cartão vencedor.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- modal -->
+<div id="modal" class="modal"><div class="box">
+  <h3 id="modalTitle"></h3>
+  <p id="modalMsg" class="muted"></p>
+  <div style="margin-top:12px"><button id="modalOK" class="btn">Fechar</button></div>
+</div></div>
+
+<!-- confetti canvas -->
+<canvas id="confettiCanvas"></canvas>
+
+<script>
+/* =========================
+   Jogo da Memória — versão offline melhorada
+   - Ranking local (localStorage)
+   - Skins para verso do cartão
+   - SFX via WebAudio
+   - Confetti canvas
+   - Fácil de personalizar
+   ========================= */
+
+(() => {
+  // Config
+  const EMOJIS = ['🍓','🍍','🍉','🍇','🥝','🍋','🥭','🍒']; // 8 pares => 16 cartas
+  const STORAGE_KEY = 'mem_royale_leaderboard_v1';
+  const BEST_KEY = 'mem_royale_best';
+  const GRID_SIZE = 4; // 4x4
+  const confettiCanvas = document.getElementById('confettiCanvas');
+
+  // State
+  let gridEl = document.getElementById('grid');
+  let timeDisplay = document.getElementById('timeDisplay');
+  let attemptsDisplay = document.getElementById('attemptsDisplay');
+  let bestDisplay = document.getElementById('bestDisplay');
+  let playerNameInput = document.getElementById('playerName');
+  let skinSelect = document.getElementById('skinSelect');
+
+  let startBtn = document.getElementById('startBtn');
+  let resetBtn = document.getElementById('resetBtn');
+  let shareBtn = document.getElementById('shareBtn');
+
+  let modal = document.getElementById('modal');
+  let modalTitle = document.getElementById('modalTitle');
+  let modalMsg = document.getElementById('modalMsg');
+  let modalOK = document.getElementById('modalOK');
+
+  let leaderEl = document.getElementById('leaderboard');
+
+  // gameplay state
+  let cards = [];
+  let first = null, second = null;
+  let lock = false;
+  let matches = 0;
+  let attempts = 0;
+  let timer = 0; let timerId = null;
+  let started = false;
+
+  // audio
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  const audioCtx = AudioCtx ? new AudioCtx() : null;
+
+  // init confetti canvas
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+  window.addEventListener('resize', ()=>{ confettiCanvas.width = window.innerWidth; confettiCanvas.height = window.innerHeight; });
+
+  // --- utility ---
+  function formatTime(sec){
+    const m = Math.floor(sec/60); const s = sec%60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+
+  // --- SFX simple (beep) ---
+  function beep(freq = 440, length=0.06, type='sine', vol=0.12){
+    if(!audioCtx) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.value = vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + length);
+    setTimeout(()=>{try{o.stop()}catch(e){}}, length*1000 + 20);
+  }
+
+  // confetti (simple particles)
+  function runConfetti(){
+    const ctx = confettiCanvas.getContext('2d');
+    const W = confettiCanvas.width, H = confettiCanvas.height;
+    const particles = [];
+    const colors = ['#ffd166','#06d6a0','#118ab2','#ef476f','#f9c74f','#90be6d'];
+    for(let i=0;i<80;i++){
+      particles.push({
+        x: rand(0,W), y: rand(-200, -20),
+        vx: rand(-200,200)/100, vy: rand(50,200)/100,
+        size: rand(6,12), color: colors[rand(0,colors.length-1)], rot: Math.random()*360, vr: (Math.random()-0.5)*6
+      });
+    }
+    let t0 = performance.now();
+    function frame(now){
+      const dt = (now - t0) / 1000; t0 = now;
+      ctx.clearRect(0,0,W,H);
+      for(let p of particles){
+        p.x += p.vx * dt * 60;
+        p.y += p.vy * dt * 60;
+        p.rot += p.vr * dt * 30;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rot * Math.PI/180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+        ctx.restore();
+      }
+      // remove if all below screen
+      if(particles.every(p=>p.y > H + 50)){
+        // stop
+      } else requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // --- Leaderboard (localStorage) ---
+  function loadLeaderboard(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return [];}
+  }
+  function saveLeaderboard(list){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  }
+  function addScore(name, seconds){
+    const list = loadLeaderboard();
+    list.push({name: name || 'Anon', time: seconds, at: Date.now()});
+    list.sort((a,b)=>a.time - b.time);
+    // keep top 50 to avoid bloat
+    const trimmed = list.slice(0,50);
+    saveLeaderboard(trimmed);
+    renderLeaderboard();
+  }
+  function renderLeaderboard(){
+    const list = loadLeaderboard();
+    const best = list[0];
+    bestDisplay.textContent = best ? formatTime(best.time) : '--:--';
+    leaderEl.innerHTML = '';
+    const top = list.slice(0,10);
+    if(top.length === 0){
+      leaderEl.innerHTML = '<div class="muted">Nenhuma pontuação registrada ainda. Seja o primeiro!</div>';
+      return;
+    }
+    top.forEach((it, idx) => {
+      const row = document.createElement('div');
+      row.className = 'leaderboard-item ' + (idx===0 ? 'you' : '');
+      row.innerHTML = `<div style="display:flex;gap:8px;align-items:center"><div style="width:34px;height:34px;border-radius:8px;background:linear-gradient(90deg,#7c3aed,#5b21b6);display:flex;align-items:center;justify-content:center;font-weight:800">${idx+1}</div><div><div style="font-weight:700">${it.name}</div><div class="muted" style="font-size:12px">${new Date(it.at).toLocaleString()}</div></div></div><div style="font-weight:800">${formatTime(it.time)}</div>`;
+      leaderEl.appendChild(row);
+    });
+  }
+
+  // --- Game functions ---
+  function createGrid(){
+    gridEl.innerHTML = '';
+    const skin = skinSelect.value || 'skin-dot';
+    gridEl.className = 'grid mt-4 ' + skin;
+    // prepare emojis
+    const arr = [...EMOJIS, ...EMOJIS];
+    // shuffle
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1)); [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    cards = [];
+    arr.forEach((emoji, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.emoji = emoji;
+      card.dataset.index = idx;
+      card.innerHTML = `<div class="card-inner"><div class="face front">?</div><div class="face back">${emoji}</div></div>`;
+      card.addEventListener('click', onCardClick);
+      gridEl.appendChild(card);
+      cards.push(card);
+    });
+  }
+
+  function startTimer(){
+    if(timerId) return;
+    timer = 0; timeDisplay.textContent = formatTime(timer);
+    timerId = setInterval(()=>{ timer++; timeDisplay.textContent = formatTime(timer); }, 1000);
+  }
+  function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+
+  function onCardClick(e){
+    if(lock) return;
+    const card = e.currentTarget;
+    if(card.classList.contains('flipped')) return;
+    if(!started){ started=true; startTimer(); }
+    // flip
+    card.classList.add('flipped');
+    beep(860,0.04,'sine',0.06);
+    if(!first) first = card;
+    else { second = card; lock = true; attempts++; attemptsDisplay.textContent = attempts; checkMatch(); }
+  }
+
+  function checkMatch(){
+    setTimeout(()=>{
+      if(first.dataset.emoji === second.dataset.emoji){
+        // matched
+        first.classList.add('matched'); second.classList.add('matched');
+        matches++;
+        beep(1200,0.06,'triangle',0.08);
+        // small scale animation
+        [first, second].forEach(c => { c.style.transform='scale(1.03)'; setTimeout(()=>c.style.transform='',250); });
+        resetSelection();
+        if(matches === EMOJIS.length){
+          // win
+          stopTimer();
+          const name = playerNameInput.value || 'Anon';
+          addScore(name, timer);
+          showWinModal(name, timer);
+          // confetti & sfx
+          runConfetti();
+          beep(520,0.12,'sine',0.12);
+        }
+      } else {
+        // not matched
+        beep(220,0.08,'sawtooth',0.08);
+        setTimeout(()=>{ first.classList.remove('flipped'); second.classList.remove('flipped'); resetSelection(); }, 700);
+      }
+    }, 350);
+  }
+  function resetSelection(){ [first, second] = [null, null]; lock = false; }
+
+  function resetGame(full=false){
+    stopTimer(); started=false; matches=0; attempts=0; attemptsDisplay.textContent = attempts;
+    // unbind and clear
+    if(cards && cards.length) cards.forEach(c=>{ c.classList.remove('flipped','matched'); c.removeEventListener('click', onCardClick); });
+    createGrid();
+    if(!full){ /* small delay to allow UI */ setTimeout(()=>{cards.forEach(c=>c.addEventListener('click', onCardClick));},50); }
+    else { /* full reset */ }
+  }
+
+  function showWinModal(name, timeSec){
+    modalTitle.textContent = `Parabéns, ${name}!`;
+    modalMsg.textContent = `Você terminou em ${formatTime(timeSec)}. Resultado salvo no ranking local.`;
+    modal.style.display = 'flex';
+  }
+
+  // share (generate text + copy to clipboard)
+  async function shareResult(){
+    const best = loadLeaderboard()[0];
+    const txt = best ? `Meu melhor no Memory Emoji: ${formatTime(best.time)}! Jogue também: (coloque seu link aqui)` : `Jogue o Memory Emoji!`;
+    try{
+      await navigator.clipboard.writeText(txt);
+      modalTitle.textContent = 'Compartilhar';
+      modalMsg.textContent = 'Texto copiado para a área de transferência. Cole nos Stories ou legendas.';
+      modal.style.display = 'flex';
+    }catch(e){
+      modalTitle.textContent = 'Compartilhar';
+      modalMsg.textContent = 'Não foi possível copiar automaticamente. Seu navegador não permite. Faça manualmente.';
+      modal.style.display = 'flex';
+    }
+  }
+
+  // bind UI
+  startBtn.addEventListener('click', ()=>{
+    resetGame();
+    // small UX: flip all cards briefly to show positions
+    cards.forEach(c=>c.classList.add('flipped'));
+    setTimeout(()=>cards.forEach(c=>c.classList.remove('flipped')), 900);
+  });
+  resetBtn.addEventListener('click', ()=>{ resetGame(true); });
+  shareBtn.addEventListener('click', shareResult);
+
+  modalOK.addEventListener('click', ()=>{ modal.style.display='none'; });
+
+  // init
+  renderLeaderboard();
+  // show best if exists
+  const storedBest = loadLeaderboard()[0];
+  bestDisplay.textContent = storedBest ? formatTime(storedBest.time) : '--:--';
+
+  // initial grid
+  createGrid();
+
+  // accessibility: allow Enter key on name to start
+  playerNameInput.addEventListener('keydown', (e)=>{ if(e.key === 'Enter') startBtn.click(); });
+
+  // small hint: on first user interaction, resume audio context if necessary
+  document.addEventListener('click', ()=>{ if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+
+  // expose for console debugging (optional)
+  window._memGame = {resetGame, createGrid, addScore, loadLeaderboard};
+})();
+</script>
+</body>
+</html>
