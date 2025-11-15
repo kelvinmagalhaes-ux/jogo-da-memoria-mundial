@@ -281,19 +281,54 @@ function renderChat(list){
 async function sendChat(){
   const name = (chatName.value || playerNameInput.value || 'Anon').slice(0,30);
   const msg = (chatMsg.value || '').trim();
-  if(!msg) return;
-  const payload = { name, msg };
-  try{
-    const res = await fetch(API_CHAT, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    if(res.ok){ chatMsg.value=''; chatNotice.textContent='Mensagem enviada'; loadChat(); return; }
-  }catch(e){}
-  // fallback local
-  const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-  local.push({ name, msg, at: Date.now() });
-  localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
-  chatMsg.value='';
-  chatNotice.textContent='Chat offline — mensagem salva localmente';
-  loadChat();
+ // Sua função que lida com o envio da mensagem (Ex: sendChatMessage ou handleChatPost)
+async function suaFuncaoDeChat() { 
+  // O código aqui deve pegar 'name' e 'msg' do seu formulário/campo de texto
+  // ... (código existente para pegar 'name' e 'msg')
+
+  if (!msg) return;
+
+  // ==========================================================
+  // ⚡ CORREÇÃO CRÍTICA: Pegar o ID do usuário logado
+  // ==========================================================
+  const { data: { user }, error: userError } = await supabaseWeb.auth.getUser();
+
+  if (userError || !user) {
+    chatNotice.textContent = 'ERRO: Faça login para enviar mensagens!';
+    return;
+  }
+  const currentUserId = user.id;
+
+  const payload = { 
+    name, 
+    msg, 
+    user_id: currentUserId // <-- Adicionamos o ID de usuário aqui!
+  };
+  
+  try {
+    const res = await fetch(API_CHAT, { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify(payload) 
+    });
+
+    if (res.ok) {
+      chatMsg.value = '';
+      chatNotice.textContent = 'Mensagem enviada';
+      loadChat(); 
+      return; 
+    }
+  } catch(e) {
+    // ... (restante do seu fallback local)
+    // fallback local
+    const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+    local.push({ name, msg, at: Date.now() });
+    localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
+    chatMsg.value = '';
+    chatNotice.textContent = 'Chat offline - mensagem salva localmente';
+    loadChat();
+  }
+}
 }
 
 /* ---------- RANKING ---------- */
@@ -339,4 +374,5 @@ setInterval(loadRanking, POLL_RANK_MS);
 </script>
 </body>
 </html>
+
 
