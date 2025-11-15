@@ -115,9 +115,22 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
     </div>
   </div>
 </div>
+<script type="module">
+  // 1. Importa a biblioteca do Supabase
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-<script>
-/* ---------- CONFIG ---------- */
+  // 2. Variáveis de conexão - SUBSTITUA ESTES VALORES!
+  const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
+
+  // 3. Inicializa a conexão (Web Client)
+  const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // ----------------------------------------------------
+  // O restante do seu código JavaScript vem AQUI
+  // (incluindo a função handleWin que corrigimos)
+  // ----------------------------------------------------
+  
 const API_CHAT = '/api/chat';
 const API_RANKING = '/api/ranking';
 const POLL_CHAT_MS = 2000;
@@ -326,3 +339,4 @@ setInterval(loadRanking, POLL_RANK_MS);
 </script>
 </body>
 </html>
+
