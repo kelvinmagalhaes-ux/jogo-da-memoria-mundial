@@ -121,7 +121,10 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
         <div id="grid" class="grid"></div>
 
         <div class="controls">
-                <select id="skinSelect" class="input">
+                <div class="chip" style="background: transparent; border: none; font-size: 12px; color: var(--accent2);">
+              Jogador: <span id="playerNameDisplay">Anon</span>
+          </div>
+          <select id="skinSelect" class="input">
             <option value="plain">Classic</option>
             <option value="darker">Darker</option>
             <option value="neon">Neon</option>
@@ -140,7 +143,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
             </div>
             <div id="chatWindow" class="chat-window"></div>
             <div style="display:flex;gap:8px;margin-top:8px">
-                <input id="chatName" class="input" placeholder="Seu nome" />
+                <span class="chip" id="chatNameDisplay" style="flex-shrink: 0; padding: 10px;">@Anon</span>
                 <input id="chatMsg" class="input" placeholder="Mensagem..." />
                 <button id="chatSend" class="btn">Enviar</button>
             </div>
@@ -167,7 +170,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
             <input id="userEmail" class="input" placeholder="E-mail" />
             <input id="userPassword" class="input" type="password" placeholder="Senha" />
             
-            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para login)" />
+            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para cadastro)" />
 
             <div style="display:flex; gap: 8px;">
                 <button id="signInBtn" class="btn" style="flex:1">Login</button>
@@ -206,7 +209,11 @@ const STORAGE_BEST = 'prm_best_v1';
 const grid = document.getElementById('grid');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
-// REMOVIDO: const playerNameInput = document.getElementById('playerName'); // Este ID não existe mais
+
+// CORRIGIDO: Novos elementos para exibir o nome
+const playerNameDisplay = document.getElementById('playerNameDisplay');
+const chatNameDisplay = document.getElementById('chatNameDisplay'); 
+
 const playerHUD = document.getElementById('playerHUD');
 const timeHUD = document.getElementById('timeHUD');
 const triesHUD = document.getElementById('triesHUD');
@@ -214,7 +221,7 @@ const bestHUD = document.getElementById('bestHUD');
 const apiStatus = document.getElementById('apiStatus');
 
 const chatWindow = document.getElementById('chatWindow');
-const chatName = document.getElementById('chatName');
+// REMOVIDO: const chatName = document.getElementById('chatName'); // Não é mais input
 const chatMsg = document.getElementById('chatMsg');
 const chatSend = document.getElementById('chatSend');
 const chatNotice = document.getElementById('chatNotice');
@@ -239,7 +246,6 @@ const authPanel = document.getElementById('authPanel');
 const signOutBtn = document.getElementById('signOutBtn'); 
 const signUpBtn = document.getElementById('signUpBtn');
 const signInBtn = document.getElementById('signInBtn');
-// NOVO: Campo de nome na aba de Autenticação
 const authPlayerNameInput = document.getElementById('authPlayerName'); 
 
 /* ---------- STATE ---------- */
@@ -304,7 +310,18 @@ function createGrid(){
   resetHUD();
 }
 // CORREÇÃO: Usa a variável global currentUserName
-function resetHUD(){ attempts=0; matches=0; triesHUD.textContent='0'; stopTimer(); timer=0; timeHUD.textContent='00:00'; started=false; playerHUD.textContent = currentUserName || 'Anon'; }
+function resetHUD(){ 
+    attempts=0; 
+    matches=0; 
+    triesHUD.textContent='0'; 
+    stopTimer(); 
+    timer=0; 
+    timeHUD.textContent='00:00'; 
+    started=false; 
+    playerHUD.textContent = currentUserName || 'Anon'; 
+    // Atualiza o display do nome na área de controles do jogo
+    playerNameDisplay.textContent = currentUserName || 'Anon';
+}
 
 function startTimer(){ if(timerId) return; timerId = setInterval(()=>{ timer++; timeHUD.textContent = formatTime(timer); }, 1000); }
 function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
@@ -373,7 +390,8 @@ async function fetchUserName(userId) {
     
     currentUserName = userName; // ATUALIZA VARIÁVEL GLOBAL
     playerHUD.textContent = userName;
-    chatName.value = userName; 
+    playerNameDisplay.textContent = userName; // CORRIGIDO: Atualiza o display na aba Início
+    chatNameDisplay.textContent = `@${userName}`; // CORRIGIDO: Atualiza o display na aba Chat
     authPlayerNameInput.value = userName; // Preenche o campo na aba de Auth
 }
 
@@ -395,8 +413,9 @@ function updateAuthUI(user) {
         
         currentUserName = 'Anon'; // ATUALIZA VARIÁVEL GLOBAL
         playerHUD.textContent = 'Anon';
-        chatName.value = 'Anon';
-        authPlayerNameInput.value = 'Anon'; // Limpa o campo na aba de Auth
+        playerNameDisplay.textContent = 'Anon'; // CORRIGIDO: Atualiza o display na aba Início
+        chatNameDisplay.textContent = `@Anon`; // CORRIGIDO: Atualiza o display na aba Chat
+        authPlayerNameInput.value = ''; // Limpa o campo de input na aba de Auth
     }
 }
 
@@ -404,17 +423,17 @@ function updateAuthUI(user) {
 async function handleAuth(isSignUp) {
     const emailEl = document.getElementById('userEmail');
     const passwordEl = document.getElementById('userPassword');
-    const playerName = authPlayerNameInput.value || 'Anon'; // PEGA O NOME DA ABA DE AUTH
+    const playerName = authPlayerNameInput.value.trim(); // PEGA O NOME DA ABA DE AUTH
     
-    const email = emailEl.value;
-    const password = passwordEl.value;
+    const email = emailEl.value.trim();
+    const password = passwordEl.value.trim();
 
     if (!email || !password) {
         alert('Por favor, preencha E-mail e Senha.');
         return;
     }
-    // Para cadastro/login, o nome não pode ser 'Anon'
-    if (playerName === 'Anon') {
+    // Para cadastro, o nome não pode ser vazio
+    if (isSignUp && !playerName) {
         alert('Por favor, defina um nome de usuário.');
         return;
     }
@@ -434,10 +453,12 @@ async function handleAuth(isSignUp) {
     
     if (authResult.data.user) {
         const userId = authResult.data.user.id;
-        // Sempre salva o nome na tabela users
+        // Salva o nome na tabela users
+        // Se for login, o nome já existe (ou será 'Anon' se não tiver no DB), 
+        // mas o upsert garante que, se o usuário alterar o campo de nome no login, ele será atualizado.
         const { error: insertError } = await supabaseWeb
             .from('users')
-            .upsert([{ id: userId, name: playerName }], { onConflict: 'id' }); 
+            .upsert([{ id: userId, name: playerName || currentUserName }], { onConflict: 'id' }); 
         
         if (insertError) {
              console.error('Erro ao salvar nome na tabela users:', insertError.message);
@@ -493,7 +514,8 @@ function renderChat(list){
 
 // CORREÇÃO: Usa a variável global currentUserName
 async function sendChat() { 
-  const name = (chatName.value || currentUserName || 'Anon').slice(0, 30);
+  // Pega o nome da variável global (não de um input)
+  const name = (currentUserName || 'Anon').slice(0, 30);
   const msg = (chatMsg.value || '').trim();
 
   if (!msg) return;
