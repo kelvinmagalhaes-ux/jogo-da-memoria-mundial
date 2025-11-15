@@ -1,626 +1,1025 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Pixel RPG Memory — Mobile Friendly</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#071017; --panel:#0e1622; --accent:#ffd166; --accent2:#7ce7c7; --muted:#9aa7bf;
-  --gap:10px; --cols:4; --card-max:96px;
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018);font-family:'Press Start 2P', monospace;color:#eaf2ff;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Pixel RPG Memory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        /* --- VARIÁVEIS GLOBAIS DE COR --- */
+        :root {
+            --bg-primary: #12121e;
+            --accent: #ffc107;
+            --muted: #a0a0b0;
+            --text-color: #fff;
+            --font-pixel: 'Press Start 2P', cursive;
+            
+            /* Variáveis de Skin - Padrão (Plain) */
+            --card-back-color: #3f51b5; 
+            --card-text-color: #fff;
+            --card-border-color: #2c3e50; 
+            --card-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
 
-/* CORREÇÃO: Container principal com apenas uma coluna para as abas */
-.container{max-width:760px;margin:14px auto;padding:12px;display:grid;grid-template-columns:1fr;gap:16px}
-.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.title{color:var(--accent);font-size:12px}
-.sub{color:var(--muted);font-size:10px}
+        /* --- TEMA PADRÃO (PLAIN) --- */
+        body.skin-plain {
+            --card-back-color: #3f51b5; 
+            --card-text-color: #fff;
+            --card-border-color: #2c3e50;
+            --card-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        }
 
-/* HUD */
-.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.chip{background:#07131a;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:11px;color:var(--muted)}
+        /* --- TEMA DARKER (MAIS ESCURO/DISCRETO) --- */
+        body.skin-darker {
+            --card-back-color: #2c3e50; 
+            --card-text-color: #ecf0f1;
+            --card-border-color: #1a1a1a;
+            --card-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
 
-/* Grid responsive: use CSS variable --card-size set by JS */
-.grid{display:grid;grid-template-columns:repeat(var(--cols), var(--card-size));gap:var(--gap);justify-content:center;padding:8px;background:linear-gradient(180deg,#04121a,#071426);border-radius:8px}
-.card{width:var(--card-size);height:var(--card-size);perspective:700px;border-radius:6px;cursor:pointer;position:relative}
-.card-inner{width:100%;height:100%;position:relative;transition:transform .5s;transform-style:preserve-3d;border-radius:6px;box-shadow:0 6px 12px rgba(0,0,0,0.5)}
-.card.flipped .card-inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:calc(var(--card-size) * 0.42);backface-visibility:hidden;user-select:none}
-.face.front{background:repeating-linear-gradient(45deg,#08131a,#08131a 6px,#0b1a24 6px);color:#bcd7ff}
-.face.back{background:linear-gradient(180deg,#2b163a,#151028);color:var(--accent2);transform:rotateY(180deg)}
+        /* --- TEMA NEON (BRILHANTE) --- */
+        body.skin-neon {
+            --card-back-color: #0d1e2e; 
+            --card-text-color: #39ff14; 
+            --card-border-color: #39ff14; 
+            --card-shadow: 0 0 10px #39ff14; 
+        }
 
-/* controls (mobile friendly) */
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
-.input, select{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:12px}
-.btn{background:var(--accent);color:#071018;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent)}
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-color);
+            font-family: var(--font-pixel);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            font-size: 12px;
+            overflow-x: hidden;
+        }
 
-/* Estilo do Chat e Ranking (Caixas) */
-.box{background:linear-gradient(180deg,#061018,#07101a);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:12px}
-.chat-window{height:300px;overflow:auto;padding:6px;border-radius:6px;background:linear-gradient(180deg,#041016,#051018)}
-.chat-row{margin-bottom:8px}
-.chat-name{color:var(--accent2);font-weight:700;margin-right:6px}
-.chat-time{color:var(--muted);font-size:10px;margin-left:8px}
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px 10px;
+        }
 
-.leader-row{display:flex;justify-content:space-between;padding:8px;border-radius:6px;margin-bottom:6px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005))}
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: var(--accent);
+            font-size: 1.5em;
+            line-height: 1.2;
+            margin: 0;
+        }
+        h2 {
+            font-size: 0.8em;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+        h3 {
+            font-size: 1.2em;
+            color: var(--accent);
+            margin: 10px 0;
+        }
 
-/* small */
-.footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
-@media (max-width:520px){
-  :root{--cols:3}
-}
-/* Novo CSS para abas */
-.tab-header {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    /* Faz o header da aba ocupar a largura total do panel */
-    margin: -14px -14px 12px -14px; 
-    padding: 14px 14px 0 14px;
-    background: var(--panel);
-    border-radius: 10px 10px 0 0;
-}
-.tab-btn {
-    background: transparent;
-    color: var(--muted);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px 8px 0 0;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.tab-btn.active {
-    color: var(--accent);
-    background: var(--bg);
-}
-.tab-panel:not(.active) {
-    display: none;
-}
-.auth-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-</style>
+        /* --- NAVEGAÇÃO --- */
+        .tabs {
+            display: flex;
+            justify-content: flex-start;
+            border-bottom: 2px solid var(--muted);
+            margin-bottom: 20px;
+        }
+        .tab-btn {
+            background: transparent;
+            color: var(--muted);
+            border: none;
+            padding: 10px 15px;
+            font-family: inherit;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom: 3px solid var(--accent);
+        }
+        .tab-content {
+            display: none;
+            padding: 10px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* --- BOTÕES E INPUTS --- */
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-family: inherit;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn:hover:not(:disabled) { opacity: 0.8; }
+        .btn.primary {
+            background-color: var(--accent);
+            color: var(--bg-primary);
+            font-weight: bold;
+        }
+        .btn.ghost {
+            background-color: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+        input[type="text"], input[type="email"], input[type="password"], select {
+            background-color: #28283e;
+            border: 1px solid var(--muted);
+            color: var(--text-color);
+            padding: 8px;
+            font-family: monospace;
+            font-size: 0.8em;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        select {
+            width: auto; /* Para o seletor de skin */
+            font-family: var(--font-pixel);
+            padding: 6px;
+        }
+
+        /* --- INÍCIO (GAME) --- */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+            font-size: 0.8em;
+        }
+        .game-info div {
+            padding: 5px;
+        }
+        .game-info span {
+            color: var(--accent);
+        }
+        .card-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .player-name-display {
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        /* --- GRID DE CARTAS --- */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            aspect-ratio: 4/4; /* Mantém o grid quadrado */
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: transparent;
+            height: 100%;
+            perspective: 1000px;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            box-shadow: var(--card-shadow); 
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2em;
+            font-weight: bold;
+        }
+        .card-face.back {
+            background-color: var(--card-back-color);
+            color: var(--card-text-color);
+            border: 2px solid var(--card-border-color);
+        }
+        .card-face.front {
+            background-color: #fff; /* Fundo branco para a imagem */
+            color: #000;
+            transform: rotateY(180deg);
+            border: 2px solid #fff;
+        }
+        .card-face.matched {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .card-content {
+            font-size: 0.6em; /* Tamanho do ponto de interrogação */
+        }
+        .card-face.front img {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+        
+        /* --- CHAT --- */
+        .chat-log {
+            height: 300px;
+            overflow-y: auto;
+            background-color: #1a1a2e;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .chat-message {
+            display: flex;
+            flex-direction: column;
+            font-size: 0.7em;
+            line-height: 1.3;
+        }
+        .chat-message .meta {
+            color: var(--muted);
+            margin-bottom: 2px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .chat-message .sender {
+            color: var(--accent);
+            font-weight: bold;
+        }
+        .chat-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .chat-input-row #chat-msg {
+            flex-grow: 1;
+            margin-bottom: 0;
+        }
+        #chat-user-display {
+            font-weight: bold;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        /* --- RANKING --- */
+        #leaderboard {
+            margin-top: 10px;
+            font-size: 0.8em;
+        }
+        .rank-entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #28283e;
+        }
+        .rank-entry .pos {
+            color: var(--accent);
+            width: 20px;
+            text-align: right;
+        }
+        .rank-entry .score {
+            color: var(--text-color);
+        }
+        .rank-entry .name {
+            flex-grow: 1;
+            padding-left: 10px;
+        }
+        
+        /* --- AUTH --- */
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            max-width: 300px;
+            margin: 20px 0;
+        }
+        .auth-actions {
+            display: flex;
+            gap: 10px;
+        }
+        #auth-notice {
+            margin-top: 15px;
+            color: var(--accent);
+            font-size: 0.7em;
+        }
+
+    </style>
 </head>
 <body>
 <div class="container">
-  <div class="panel">
+    <header>
+        <h1>PIXEL RPG MEMORY <span style="font-size: 0.5em; color: red;">BETA</span></h1>
+        <h2>Pixel-art moderno • Mobile-first</h2>
+    </header>
 
-    <div class="tab-header">
-        <button id="tabAppBtn" class="tab-btn">🕹️ Início</button>
-        <button id="tabChatBtn" class="tab-btn">💬 Chat</button>
-        <button id="tabRankBtn" class="tab-btn">🏆 Ranking</button>
-        <button id="tabAuthBtn" class="tab-btn">🔒 Cadastro/Login</button>
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="home">🏠 Início</button>
+        <button class="tab-btn" data-tab="chat">💬 Chat</button>
+        <button class="tab-btn" data-tab="ranking">🏆 Ranking</button>
+        <button class="tab-btn" data-tab="auth">🔒 Cadastro/Login</button>
     </div>
 
-    <div id="mainApp" class="tab-panel">
-        <div class="header">
-          <div>
-            <div class="title">PIXEL RPG MEMORY</div>
-            <div class="sub">Pixel-art moderno • Mobile-first</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
-          </div>
-        </div>
-
-        <div class="hud">
-          <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
-          <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
-          <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
-          <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
-        </div>
-
-        <div id="grid" class="grid"></div>
-
-        <div class="controls">
-                <div class="chip" style="background: transparent; border: none; font-size: 12px; color: var(--accent2);">
-              Jogador: <span id="playerNameDisplay">Anon</span>
-          </div>
-          <select id="skinSelect" class="input">
-            <option value="plain">Classic</option>
-            <option value="darker">Darker</option>
-            <option value="neon">Neon</option>
-          </select>
-          <button id="startBtn" class="btn">Start</button>
-          <button id="resetBtn" class="btn ghost">Reset</button>
-        </div>
-        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
-    </div>
-    
-    <div id="chatPanel" class="tab-panel">
-        <div class="box" style="margin-top: 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <strong style="color:var(--accent)">💬 Chat Global</strong>
-                <button id="clearChat" class="btn ghost" style="padding:6px">Limpar Local</button>
-            </div>
-            <div id="chatWindow" class="chat-window"></div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-                <span class="chip" id="chatNameDisplay" style="flex-shrink: 0; padding: 10px;">@Anon</span>
-                <input id="chatMsg" class="input" placeholder="Mensagem..." />
-                <button id="chatSend" class="btn">Enviar</button>
-            </div>
-            <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-        </div>
-    </div>
-
-    <div id="rankPanel" class="tab-panel">
-        <div class="box" style="margin-top: 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <strong style="color:var(--accent)">🏆 Ranking Global</strong>
-                <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
-            </div>
-            <div id="leaderboard"></div>
-            <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-        </div>
-    </div>
-    
-    <div id="authPanel" class="tab-panel">
-        <div class="auth-controls">
-            <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
-            <div id="authState" class="chip" style="color: var(--accent2);">Status: Desconectado</div>
-            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o nome que você salvará no Supabase.</p>
-            <input id="userEmail" class="input" placeholder="E-mail" />
-            <input id="userPassword" class="input" type="password" placeholder="Senha" />
-            
-            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para cadastro)" />
-
-            <div style="display:flex; gap: 8px;">
-                <button id="signInBtn" class="btn" style="flex:1">Login</button>
-                <button id="signUpBtn" class="btn ghost" style="flex:1">Cadastrar</button>
-            </div>
-            <button id="signOutBtn" class="btn ghost" style="background: #a82e2e; color: white; display: none;">Sair (Logout)</button>
+    <div id="tab-home" class="tab-content active">
+        <div class="game-info">
+            <div>Jogador: <span id="player-name-display">Anon</span></div>
+            <div>Tempo: <span id="time-display">00:00</span></div>
+            <div>Tentativas: <span id="attempts-display">0</span></div>
+            <div>Melhor: <span id="best-time-display">00:00</span></div>
         </div>
+
+        <div class="card-controls">
+            <select id="skin-selector">
+                <option value="plain">Classic</option>
+                <option value="darker">Darker</option>
+                <option value="neon">Neon</option>
+            </select>
+            <button id="start-btn" class="btn primary">Start</button>
+        </div>
+        
+        <div class="card-grid" id="card-grid">
+            </div>
+
+        <button id="reset-btn" class="btn ghost" style="margin-top: 20px;">Reset</button>
+        <p style="margin-top: 10px; color: var(--muted); font-size: 0.7em;">
+            Toque nas cartas para virar - objetivo: terminar no menor tempo
+        </p>
     </div>
-  </div>
+
+    <div id="tab-chat" class="tab-content">
+        <h3>💬 Chat Global</h3>
+        <button id="clear-local-chat" class="btn ghost" style="float: right;">Limpar Local</button>
+        <div class="chat-log" id="chat-log">
+            </div>
+        
+        <div class="chat-input-row">
+            <div id="chat-user-display">@Anon</div> 
+            
+            <input type="text" id="chat-msg" placeholder="Digite sua mensagem...">
+            <button id="send-chat-btn" class="btn primary">Enviar</button>
+        </div>
+        <p id="chat-notice" style="margin-top: 10px; color: var(--accent); font-size: 0.7em;">Faça login para enviar mensagens globais.</p>
+    </div>
+
+    <div id="tab-ranking" class="tab-content">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <strong style="color:var(--accent)">🏆 Ranking Global</strong>
+            <button id="refreshRank" class="btn ghost">Atualizar</button>
+        </div>
+        <div id="leaderboard">
+            </div>
+        <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px;">Carregando...</div>
+    </div>
+    
+    <div id="tab-auth" class="tab-content">
+        <h3>🔒 Autenticação</h3>
+        <p id="auth-status" style="color: var(--accent);">Deslogado.</p>
+        
+        <div class="auth-form" id="login-form">
+            <input type="email" id="auth-email" placeholder="E-mail">
+            <input type="password" id="auth-password" placeholder="Senha">
+            <input type="text" id="auth-player-name" placeholder="Nome de Usuário (3+ chars)">
+            
+            <div class="auth-actions">
+                <button id="signup-btn" class="btn primary">Cadastrar</button>
+                <button id="login-btn" class="btn ghost">Login</button>
+            </div>
+            
+            <button id="logout-btn" class="btn ghost" style="margin-top: 10px; display: none;">Logout</button>
+        </div>
+        
+        <p id="auth-notice"></p>
+    </div>
+
 </div>
+
 <script type="module">
-  // 1. Importa a biblioteca do Supabase
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+    // 1. Importa a biblioteca do Supabase
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/dist/module.js';
 
-  // 2. Variáveis de conexão - SUBSTITUÍDAS COM SEUS VALORES
-  const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
+    // 2. Variáveis de conexão - SUBSTITUA ESTES VALORES!
+    const SUPABASE_URL = 'SUA_URL_DO_SUPABASE'; 
+    const SUPABASE_ANON_KEY = 'SUA_CHAVE_ANON'; 
 
-  // 3. Inicializa a conexão (Web Client)
-  const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
-  // ----------------------------------------------------
-  // CONFIGURAÇÕES E VARIÁVEIS
-  // ----------------------------------------------------
-  
-const API_CHAT = '/api/chat';
-const API_RANKING = '/api/ranking';
-const POLL_CHAT_MS = 2000;
-const POLL_RANK_MS = 4000;
-const EMOJIS = ['🍓','🍍','🍉','🍇','🥝','🍋','🥭','🍒'];
-const STORAGE_CHAT = 'prm_chat_v1';
-const STORAGE_RANK = 'prm_rank_v1';
-const STORAGE_BEST = 'prm_best_v1';
-
-/* ---------- DOM ---------- */
-const grid = document.getElementById('grid');
-const startBtn = document.getElementById('startBtn');
-const resetBtn = document.getElementById('resetBtn');
-
-// CORRIGIDO: Novos elementos para exibir o nome
-const playerNameDisplay = document.getElementById('playerNameDisplay');
-const chatNameDisplay = document.getElementById('chatNameDisplay'); 
-
-const playerHUD = document.getElementById('playerHUD');
-const timeHUD = document.getElementById('timeHUD');
-const triesHUD = document.getElementById('triesHUD');
-const bestHUD = document.getElementById('bestHUD');
-const apiStatus = document.getElementById('apiStatus');
-
-const chatWindow = document.getElementById('chatWindow');
-// REMOVIDO: const chatName = document.getElementById('chatName'); // Não é mais input
-const chatMsg = document.getElementById('chatMsg');
-const chatSend = document.getElementById('chatSend');
-const chatNotice = document.getElementById('chatNotice');
-
-const leaderboardEl = document.getElementById('leaderboard');
-const refreshRank = document.getElementById('refreshRank');
-const clearChatBtn = document.getElementById('clearChat');
-const rankNotice = document.getElementById('rankNotice');
-
-// Elementos de Auth e Abas
-const authStateEl = document.getElementById('authState');
-const tabAppBtn = document.getElementById('tabAppBtn');
-const tabChatBtn = document.getElementById('tabChatBtn'); 
-const tabRankBtn = document.getElementById('tabRankBtn'); 
-const tabAuthBtn = document.getElementById('tabAuthBtn');
-
-const mainAppPanel = document.getElementById('mainApp');
-const chatPanel = document.getElementById('chatPanel'); 
-const rankPanel = document.getElementById('rankPanel'); 
-const authPanel = document.getElementById('authPanel');
-
-const signOutBtn = document.getElementById('signOutBtn'); 
-const signUpBtn = document.getElementById('signUpBtn');
-const signInBtn = document.getElementById('signInBtn');
-const authPlayerNameInput = document.getElementById('authPlayerName'); 
-
-/* ---------- STATE ---------- */
-// VARIÁVEL GLOBAL PARA ARMAZENAR O NOME ATUAL
-let currentUserName = 'Anon'; 
-let cards = [], first=null, second=null, lock=false, matches=0, attempts=0;
-let timer=0, timerId=null, started=false;
-let bestLocal = localStorage.getItem(STORAGE_BEST) ? parseInt(localStorage.getItem(STORAGE_BEST)) : null;
-if(bestLocal) bestHUD.textContent = formatTime(bestLocal);
-
-/* ---------- RESPONSIVE CARD SIZE ---------- */
-function computeCardSize(){
-  // calculate columns based on viewport width
-  const containerWidth = Math.min(window.innerWidth - 40, 720); // keep some margin
-  const cols = window.innerWidth <= 520 ? 3 : 4;
-  document.documentElement.style.setProperty('--cols', cols);
-  const gap = 10;
-  const w = Math.floor((containerWidth - (cols-1)*gap - 16) / cols);
-  const size = Math.max(56, Math.min(w, 110));
-  document.documentElement.style.setProperty('--card-size', size + 'px');
-}
-window.addEventListener('resize', computeCardSize);
-computeCardSize();
-
-/* ---------- UTIL ---------- */
-function formatTime(s){const m=Math.floor(s/60); const sec=s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-/* ---------- ABAS (REVISADO) ---------- */
-function showTab(tabId) {
-    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-
-    document.getElementById(tabId).classList.add('active');
+    // 3. Inicializa a conexão (Web Client)
+    const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    const btnMap = {
-        'mainApp': 'tabAppBtn',
-        'chatPanel': 'tabChatBtn',
-        'rankPanel': 'tabRankBtn',
-        'authPanel': 'tabAuthBtn'
+    // 4. Variável Global de Nome (carregada na inicialização e login)
+    let currentUserName = localStorage.getItem('currentUserName') || 'Anon';
+    
+    // 5. Configurações de Endpoints (Assumindo que você usa Vercel/Edge Functions)
+    const API_CHAT = '/api/chat';
+    const API_RANKING = '/api/ranking';
+    const POLL_CHAT_MS = 2000;
+    const POLL_RANK_MS = 4000;
+    const EMOJIS = ['🍓', '🍒', '🍉', '🍇', '🥝', '🍋', '🍎', '🍑']; 
+    const STORAGE_CHAT = 'prm_chat_v1';
+    const STORAGE_RANK = 'prm_rank_v1';
+    const STORAGE_BEST = 'prm_best_v1';
+    const SKIN_STORAGE_KEY = 'prm_skin_v1';
+
+
+    // ======================================================================
+    // DOM ELEMENTS (CACHE)
+    // ======================================================================
+    const $ = id => document.getElementById(id);
+
+    const DOM = {
+        // Game
+        cardGrid: $('card-grid'),
+        timeDisplay: $('time-display'),
+        attemptsDisplay: $('attempts-display'),
+        bestTimeDisplay: $('best-time-display'),
+        startBtn: $('start-btn'),
+        resetBtn: $('reset-btn'),
+        playerNameDisplay: $('player-name-display'),
+        skinSelector: $('skin-selector'),
+        
+        // Chat
+        chatLog: $('chat-log'),
+        chatMsg: $('chat-msg'),
+        sendChatBtn: $('send-chat-btn'),
+        chatNotice: $('chat-notice'),
+        clearLocalChatBtn: $('clear-local-chat'),
+        chatUserDisplay: $('chat-user-display'), // NOVO
+        
+        // Ranking
+        leaderboard: $('leaderboard'),
+        rankNotice: $('rankNotice'),
+        refreshRankBtn: $('refreshRank'),
+
+        // Auth
+        authEmailInput: $('auth-email'),
+        authPasswordInput: $('auth-password'),
+        authPlayerNameInput: $('auth-player-name'), // NOVO
+        authNotice: $('auth-notice'),
+        authStatus: $('auth-status'),
+        signupBtn: $('signup-btn'),
+        loginBtn: $('login-btn'),
+        logoutBtn: $('logout-btn')
     };
-    if (btnMap[tabId]) {
-        document.getElementById(btnMap[tabId]).classList.add('active');
-    }
-}
 
-/* ---------- GRID, GAME LOGIC, RANKING e CHAT (MANTIDOS) ---------- */
-function createGrid(){
-  grid.innerHTML='';
-  const arr = shuffle([...EMOJIS, ...EMOJIS]);
-  cards = [];
-  arr.forEach((emoji,idx)=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.emoji = emoji;
-    card.innerHTML = `<div class="card-inner"><div class="face front">?</div><div class="face back">${emoji}</div></div>`;
-    card.addEventListener('click', onCardClick);
-    grid.appendChild(card);
-    cards.push(card);
-  });
-  resetHUD();
-}
-// CORREÇÃO: Usa a variável global currentUserName
-function resetHUD(){ 
-    attempts=0; 
-    matches=0; 
-    triesHUD.textContent='0'; 
-    stopTimer(); 
-    timer=0; 
-    timeHUD.textContent='00:00'; 
-    started=false; 
-    playerHUD.textContent = currentUserName || 'Anon'; 
-    // Atualiza o display do nome na área de controles do jogo
-    playerNameDisplay.textContent = currentUserName || 'Anon';
-}
 
-function startTimer(){ if(timerId) return; timerId = setInterval(()=>{ timer++; timeHUD.textContent = formatTime(timer); }, 1000); }
-function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
+    // ======================================================================
+    // VARIÁVEIS DE JOGO
+    // ======================================================================
+    let cardValues = [];
+    let flippedCards = [];
+    let matchedPairs = 0;
+    let gameActive = false;
+    let attempts = 0;
+    let timer = 0;
+    let intervalId = null;
+    let bestTime = parseInt(localStorage.getItem(STORAGE_BEST) || 99999);
 
-function onCardClick(e){
-  if(lock) return;
-  const c = e.currentTarget;
-  if(c.classList.contains('flipped')) return;
-  if(!started){ started=true; startTimer(); }
-  c.classList.add('flipped');
-  if(!first) first=c;
-  else { second=c; lock=true; attempts++; triesHUD.textContent=attempts; setTimeout(checkMatch, 500); }
-}
-function checkMatch(){
-  if(first.dataset.emoji === second.dataset.emoji){
-    matches++; first.classList.add('matched'); second.classList.add('matched');
-    [first,second]=[null,null]; lock=false;
-    if(matches === EMOJIS.length){ stopTimer(); handleWin(); }
-  } else {
-    first.classList.remove('flipped'); second.classList.remove('flipped');
-    [first,second]=[null,null]; lock=false;
-  }
-}
 
-// CORREÇÃO: Usa a variável global currentUserName
-async function handleWin(){
-  const name = (currentUserName || 'Anon').slice(0,30);
-  // save local best
-  if(!bestLocal || timer < bestLocal){ bestLocal = timer; localStorage.setItem(STORAGE_BEST, String(bestLocal)); bestHUD.textContent = formatTime(bestLocal); }
-  // attempt to send ranking
-  const payload = { name, time: timer };
-  let sent = false;
-  try{
-    const res = await fetch(API_RANKING, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    if(res.ok){ sent = true; rankNotice.textContent = 'Tempo enviado ao ranking global!'; }
-  }catch(e){ rankNotice.textContent = 'Ranking offline — salvo localmente'; }
-  if(!sent){
-    // fallback local store
-    const L = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-    L.push({ name, time: timer, at: Date.now() });
-    L.sort((a,b)=>a.time - b.time);
-    localStorage.setItem(STORAGE_RANK, JSON.stringify(L.slice(0,100)));
-  } else {
-    await loadRanking();
-  }
-  alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
-}
+    // ======================================================================
+    // 1. LÓGICA DO JOGO (GAME)
+    // ======================================================================
 
-/* ---------- AUTENTICAÇÃO ---------- */
-// CORREÇÃO: Atualiza a variável global
-async function fetchUserName(userId) {
-    const { data, error } = await supabaseWeb
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
-    
-    let userName = 'Anon';
-    if (error && error.code !== 'PGRST116') { 
-        console.error('Erro ao buscar nome do usuário:', error.message);
-    }
-    
-    if (data && data.name) { 
-        userName = data.name;
-    } 
-    
-    currentUserName = userName; // ATUALIZA VARIÁVEL GLOBAL
-    playerHUD.textContent = userName;
-    playerNameDisplay.textContent = userName; // CORRIGIDO: Atualiza o display na aba Início
-    chatNameDisplay.textContent = `@${userName}`; // CORRIGIDO: Atualiza o display na aba Chat
-    authPlayerNameInput.value = userName; // Preenche o campo na aba de Auth
-}
-
-// CORREÇÃO: Atualiza a variável global
-function updateAuthUI(user) {
-    if (user) {
-        authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
-        signOutBtn.style.display = 'block';
-        signUpBtn.style.display = 'none';
-        signInBtn.style.display = 'none';
-        
-        fetchUserName(user.id); 
-
-    } else {
-        authStateEl.textContent = 'Status: Desconectado';
-        signOutBtn.style.display = 'none';
-        signUpBtn.style.display = 'inline-block';
-        signInBtn.style.display = 'inline-block';
-        
-        currentUserName = 'Anon'; // ATUALIZA VARIÁVEL GLOBAL
-        playerHUD.textContent = 'Anon';
-        playerNameDisplay.textContent = 'Anon'; // CORRIGIDO: Atualiza o display na aba Início
-        chatNameDisplay.textContent = `@Anon`; // CORRIGIDO: Atualiza o display na aba Chat
-        authPlayerNameInput.value = ''; // Limpa o campo de input na aba de Auth
-    }
-}
-
-// CORREÇÃO: Pega o nome do novo campo
-async function handleAuth(isSignUp) {
-    const emailEl = document.getElementById('userEmail');
-    const passwordEl = document.getElementById('userPassword');
-    const playerName = authPlayerNameInput.value.trim(); // PEGA O NOME DA ABA DE AUTH
-    
-    const email = emailEl.value.trim();
-    const password = passwordEl.value.trim();
-
-    if (!email || !password) {
-        alert('Por favor, preencha E-mail e Senha.');
-        return;
-    }
-    // Para cadastro, o nome não pode ser vazio
-    if (isSignUp && !playerName) {
-        alert('Por favor, defina um nome de usuário.');
-        return;
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     }
 
-    let authResult;
-
-    if (isSignUp) {
-        authResult = await supabaseWeb.auth.signUp({ email, password });
-    } else {
-        authResult = await supabaseWeb.auth.signInWithPassword({ email, password });
+    function generateCards() {
+        cardValues = shuffle([...EMOJIS, ...EMOJIS]);
+        DOM.cardGrid.innerHTML = '';
+        cardValues.forEach((value, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.dataset.index = index;
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-face front"><img src="https://emojicdn.elk.sh/${encodeURIComponent(value)}?style=twitter" alt="emoji"></div>
+                    <div class="card-face back"><span class="card-content">?</span></div>
+                </div>
+            `;
+            card.addEventListener('click', () => handleCardClick(card));
+            DOM.cardGrid.appendChild(card);
+        });
     }
 
-    if (authResult.error) {
-        alert(`Erro de autenticação: ${authResult.error.message}`);
-        return;
+    function formatTime(totalSeconds) {
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
-    
-    if (authResult.data.user) {
-        const userId = authResult.data.user.id;
-        // Salva o nome na tabela users
-        // Se for login, o nome já existe (ou será 'Anon' se não tiver no DB), 
-        // mas o upsert garante que, se o usuário alterar o campo de nome no login, ele será atualizado.
-        const { error: insertError } = await supabaseWeb
-            .from('users')
-            .upsert([{ id: userId, name: playerName || currentUserName }], { onConflict: 'id' }); 
-        
-        if (insertError) {
-             console.error('Erro ao salvar nome na tabela users:', insertError.message);
+
+    function updateTimer() {
+        timer++;
+        DOM.timeDisplay.textContent = formatTime(timer);
+    }
+
+    function startGame() {
+        if (gameActive) return;
+
+        resetGame();
+        generateCards();
+        gameActive = true;
+        intervalId = setInterval(updateTimer, 1000);
+    }
+
+    function resetGame() {
+        clearInterval(intervalId);
+        gameActive = false;
+        timer = 0;
+        attempts = 0;
+        matchedPairs = 0;
+        flippedCards = [];
+        DOM.timeDisplay.textContent = formatTime(0);
+        DOM.attemptsDisplay.textContent = 0;
+        DOM.cardGrid.innerHTML = '';
+        DOM.bestTimeDisplay.textContent = formatTime(bestTime);
+    }
+
+    function handleCardClick(card) {
+        if (!gameActive || card.classList.contains('flipped') || flippedCards.length >= 2) return;
+
+        card.classList.add('flipped');
+        flippedCards.push(card);
+
+        if (flippedCards.length === 2) {
+            attempts++;
+            DOM.attemptsDisplay.textContent = attempts;
+            const [card1, card2] = flippedCards;
+            const value1 = cardValues[card1.dataset.index];
+            const value2 = cardValues[card2.dataset.index];
+
+            if (value1 === value2) {
+                // MATCH
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                card1.querySelector('.card-face.front').classList.add('matched');
+                card2.querySelector('.card-face.front').classList.add('matched');
+                matchedPairs++;
+                flippedCards = [];
+
+                if (matchedPairs === EMOJIS.length) {
+                    handleWin();
+                }
+            } else {
+                // NO MATCH
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    flippedCards = [];
+                }, 1000);
+            }
         }
     }
 
-    if (isSignUp) {
-        alert(`Sucesso! Verifique seu e-mail para confirmar o cadastro.`);
+    async function handleWin() {
+        clearInterval(intervalId);
+        gameActive = false;
+        
+        if (timer < bestTime) {
+            bestTime = timer;
+            localStorage.setItem(STORAGE_BEST, bestTime);
+            DOM.bestTimeDisplay.textContent = formatTime(bestTime);
+        }
+
+        DOM.rankNotice.textContent = `Vitória em ${formatTime(timer)}! Tentando enviar score...`;
+        
+        // --- ENVIO DO RANKING PARA API ---
+        const { data: { user } } = await supabaseWeb.auth.getUser();
+        const userId = user ? user.id : null;
+        
+        const payload = {
+            name: currentUserName,
+            score: timer, // Menor tempo é melhor
+            user_id: userId
+        };
+
+        try {
+            const res = await fetch(API_RANKING, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                DOM.rankNotice.textContent = 'Score enviado com sucesso! Atualizando ranking...';
+                await loadRanking();
+            } else {
+                const errorData = await res.json();
+                DOM.rankNotice.textContent = `Falha ao enviar score (API): ${errorData.message || 'Erro desconhecido'}`;
+            }
+        } catch (e) {
+            DOM.rankNotice.textContent = 'Falha de rede ao enviar score. Tente novamente.';
+        }
     }
 
-    supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
-    loadChat(); 
-    showTab('mainApp'); 
-}
+    // ======================================================================
+    // 2. LÓGICA DE SKINS
+    // ======================================================================
 
-async function handleSignOut() {
-    const { error } = await supabaseWeb.auth.signOut();
-    if (error) {
-        alert(`Erro ao sair: ${error.message}`);
-        return;
+    /**
+     * Aplica a skin selecionada ao elemento <body> e salva no Local Storage.
+     * @param {string} skinName - O nome da skin (ex: 'plain', 'darker', 'neon').
+     */
+    function applySkin(skinName) {
+        const body = document.body;
+        
+        // Remove todas as classes de skin existentes
+        body.classList.remove('skin-plain', 'skin-darker', 'skin-neon');
+
+        // Adiciona a nova classe
+        body.classList.add(`skin-${skinName}`);
+        
+        // Atualiza o seletor para refletir o estado
+        DOM.skinSelector.value = skinName;
+        
+        // Salva no Local Storage
+        localStorage.setItem(SKIN_STORAGE_KEY, skinName);
     }
-    alert('Desconectado com sucesso!');
-    updateAuthUI(null);
-    loadChat(); 
-}
 
-/* ---------- CHAT e RANKING (MANTIDOS, usando currentUserName) ---------- */
-async function loadChat(){
-  // try API
-  try{
-    const res = await fetch(API_CHAT);
-    if(res.ok){
-      const data = await res.json();
-      renderChat(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-  renderChat(local);
-}
-function renderChat(list){
-  chatWindow.innerHTML = '';
-  list.slice(-200).forEach(it=>{
-    const row = document.createElement('div'); row.className='chat-row';
-    const msgText = it.message || it.msg || ''; 
-    row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(msgText)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
-    chatWindow.appendChild(row);
-  });
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-}
+    /**
+     * Carrega a skin salva no Local Storage ou usa 'plain' como padrão.
+     */
+    function loadSavedSkin() {
+        const savedSkin = localStorage.getItem(SKIN_STORAGE_KEY) || 'plain';
+        applySkin(savedSkin);
+    }
 
-// CORREÇÃO: Usa a variável global currentUserName
-async function sendChat() { 
-  // Pega o nome da variável global (não de um input)
-  const name = (currentUserName || 'Anon').slice(0, 30);
-  const msg = (chatMsg.value || '').trim();
+    // ======================================================================
+    // 3. AUTENTICAÇÃO E PERFIL (CORRIGIDO)
+    // ======================================================================
 
-  if (!msg) return;
+    /**
+     * Carrega o nome de usuário do Supabase Profile ou cria um novo se não existir.
+     */
+    async function loadUserData(user) {
+        // 1. Tenta buscar o profile do usuário logado
+        const { data, error } = await supabaseWeb
+            .from('profiles')
+            .select('username')
+            .eq('user_id', user.id)
+            .single();
+            
+        if (error && error.code !== 'PGRST116') { // PGRST116 = não encontrado (primeiro login/profile)
+            console.error('Erro ao buscar perfil:', error);
+            return;
+        }
+        
+        let newUsername = null;
+        
+        // 2. Se o profile existir e tiver nome
+        if (data && data.username) {
+            newUsername = data.username;
+        } else {
+            // Se NÃO existir, pega o nome digitado no input (se estiver logando/cadastrando)
+            // Ou usa um placeholder se a sessão foi restaurada
+            newUsername = DOM.authPlayerNameInput.value.trim() || `Player${Math.floor(Math.random() * 1000)}`;
 
-  const { data: { session }, error: sessionError } = await supabaseWeb.auth.getSession();
+            // 3. Insere o novo profile no Supabase
+            const { error: insertError } = await supabaseWeb
+                .from('profiles')
+                .insert([{ user_id: user.id, username: newUsername }]);
 
-  if (sessionError || !session || !session.user) {
-    chatNotice.textContent = 'ERRO: Você deve estar logado para enviar mensagens!';
-    return;
-  }
-  const currentUserId = session.user.id;
-  const accessToken = session.access_token; 
+            if (insertError) {
+                console.error('Erro ao criar profile:', insertError);
+                DOM.authNotice.textContent = `Erro ao salvar nome: ${insertError.message}`;
+                return;
+            }
+        }
+        
+        // 4. Atualiza variáveis globais e UI
+        currentUserName = newUsername;
+        localStorage.setItem('currentUserName', currentUserName); // Salva localmente
 
-  const payload = { 
-    name, 
-    message: msg, 
-    user_id: currentUserId 
-  };
-  
-  try {
-    const res = await fetch(API_CHAT, { 
-      method: 'POST', 
-      headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}` 
-        }, 
-      body: JSON.stringify(payload) 
-    });
-
-    if (res.ok) {
-      chatMsg.value = '';
-      chatNotice.textContent = 'Mensagem enviada';
-      loadChat(); 
-      return; 
-    }
-    chatNotice.textContent = `Erro ao enviar chat: ${res.statusText}`;
-
-  } catch(e) {
-    const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-    local.push({ name, msg, at: Date.now() });
-    localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
-    chatMsg.value = '';
-    chatNotice.textContent = 'Chat offline - mensagem salva localmente';
-    loadChat();
-  }
-}
+        DOM.playerNameDisplay.textContent = currentUserName;
+        DOM.chatUserDisplay.textContent = `@${currentUserName}`;
+        DOM.authStatus.textContent = `Logado como: ${currentUserName}`;
+        DOM.authPlayerNameInput.value = currentUserName; // Preenche o input
+        
+        DOM.logoutBtn.style.display = 'block';
+        DOM.signupBtn.style.display = 'none';
+        DOM.loginBtn.style.display = 'none';
+    }
 
 
-async function loadRanking(){
-  try{
-    const res = await fetch(API_RANKING);
-    if(res.ok){
-      const data = await res.json();
-      renderRanking(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-  renderRanking(local);
-}
-function renderRanking(list){
-  leaderboardEl.innerHTML = '';
-  if(!list || list.length===0){ leaderboardEl.innerHTML = '<div style="color:var(--muted)">Nenhum score registrado.</div>'; return; }
-  list.slice(0,20).forEach((it, idx)=>{
-    const row = document.createElement('div'); row.className='leader-row';
-    row.innerHTML = `<div>${idx+1}. ${escapeHtml(it.name)}</div><div style="font-weight:900;color:var(--accent)">${formatTime(Math.round(it.time))}</div>`;
-    leaderboardEl.appendChild(row);
-  });
-}
+    async function handleAuth(isSignUp) {
+        const email = DOM.authEmailInput.value.trim();
+        const password = DOM.authPasswordInput.value.trim();
+        const username = DOM.authPlayerNameInput.value.trim();
+
+        if (isSignUp && username.length < 3) {
+            DOM.authNotice.textContent = 'O Nome de Usuário deve ter pelo menos 3 caracteres.';
+            return;
+        }
+        
+        if (!email || password.length < 6) {
+            DOM.authNotice.textContent = 'E-mail inválido ou senha menor que 6 caracteres.';
+            return;
+        }
+
+        DOM.authNotice.textContent = `Aguarde...`;
+        
+        let authResponse;
+        if (isSignUp) {
+            authResponse = await supabaseWeb.auth.signUp({ email, password });
+        } else {
+            authResponse = await supabaseWeb.auth.signInWithPassword({ email, password });
+        }
+
+        const { data: { user }, error: authError } = authResponse;
+
+        if (authError) {
+            console.error('Auth Error:', authError);
+            DOM.authNotice.textContent = `ERRO: ${authError.message}`;
+            return;
+        }
+
+        if (user) {
+            DOM.authNotice.textContent = `Sucesso! ${isSignUp ? 'Cadastrado' : 'Logado'} como: ${user.email}`;
+            await loadUserData(user); // CHAMA A LÓGICA DE PERFIL
+            
+            // Redireciona para a aba Home
+            document.querySelector('.tab-btn[data-tab="home"]').click(); 
+        } 
+    }
+
+    async function handleLogout() {
+        const { error } = await supabaseWeb.auth.signOut();
+        if (!error) {
+            currentUserName = 'Anon';
+            localStorage.removeItem('currentUserName');
+            
+            // Redefine a UI
+            DOM.playerNameDisplay.textContent = 'Anon';
+            DOM.chatUserDisplay.textContent = '@Anon';
+            DOM.authStatus.textContent = 'Deslogado.';
+            DOM.authPlayerNameInput.value = '';
+            DOM.authEmailInput.value = '';
+            DOM.authPasswordInput.value = '';
+            
+            DOM.logoutBtn.style.display = 'none';
+            DOM.signupBtn.style.display = 'inline-block';
+            DOM.loginBtn.style.display = 'inline-block';
+            DOM.authNotice.textContent = 'Logout realizado com sucesso.';
+        }
+    }
 
 
-/* ---------- EVENTS ---------- */
-startBtn.addEventListener('click', ()=>{ createGrid(); computeCardSize(); });
-resetBtn.addEventListener('click', ()=>{ createGrid(); localStorage.removeItem(STORAGE_RANK); rankNotice.textContent='Ranking local limpo'; });
-chatSend.addEventListener('click', ()=>{ sendChat(); });
-chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
-refreshRank.addEventListener('click', ()=>loadRanking());
-clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
+    // ======================================================================
+    // 4. CHAT (CORRIGIDO)
+    // ======================================================================
 
-// Conecta os novos botões de Abas e Autenticação
-signUpBtn.addEventListener('click', () => handleAuth(true)); 
-signInBtn.addEventListener('click', () => handleAuth(false));
-signOutBtn.addEventListener('click', handleSignOut);
+    async function loadChat() {
+        // Tenta carregar da API (global)
+        try {
+            const res = await fetch(API_CHAT);
+            if (res.ok) {
+                const messages = await res.json();
+                renderChat(messages.reverse(), true);
+                localStorage.removeItem(STORAGE_CHAT); // Limpa o fallback local se o global funcionar
+                return;
+            }
+        } catch (e) {
+            console.warn('Falha ao carregar chat global. Usando fallback local.', e);
+        }
 
-tabAppBtn.addEventListener('click', () => showTab('mainApp'));
-tabChatBtn.addEventListener('click', () => showTab('chatPanel')); 
-tabRankBtn.addEventListener('click', () => showTab('rankPanel')); 
-tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
+        // Fallback local
+        const localMessages = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+        renderChat(localMessages, false);
+    }
+
+    function renderChat(messages, isGlobal) {
+        DOM.chatLog.innerHTML = '';
+        if (messages.length === 0) {
+            DOM.chatLog.innerHTML = `<p style="color:var(--muted); text-align:center;">${isGlobal ? 'Sem mensagens globais.' : 'Chat local vazio.'}</p>`;
+            return;
+        }
+
+        messages.forEach(msg => {
+            const date = new Date(msg.created_at || msg.at);
+            const timeString = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = 'chat-message';
+            messageElement.innerHTML = `
+                <div class="meta">
+                    <span class="sender">${msg.name}</span>
+                    <span class="time">${timeString}</span>
+                </div>
+                <div>${msg.message || msg.msg}</div>
+            `;
+            DOM.chatLog.prepend(messageElement); // Adiciona no topo
+        });
+        
+        DOM.chatNotice.textContent = isGlobal ? 'Chat Global carregado.' : 'Chat Local (offline).';
+    }
 
 
-/* ---------- INIT ---------- */
-createGrid(); 
-loadChat(); 
-loadRanking();
-setInterval(loadChat, POLL_CHAT_MS);
-setInterval(loadRanking, POLL_RANK_MS);
+    /**
+     * Envia a mensagem para a API (Global Chat)
+     */
+    async function sendChat() {
+        const msg = (DOM.chatMsg.value || '').trim();
+        if (!msg) return;
 
-// Inicializa a aba principal
-showTab('mainApp'); 
+        // 1. Tenta obter o usuário logado
+        const { data: { user }, error: userError } = await supabaseWeb.auth.getUser();
 
-// Inicializa a UI de autenticação
-supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
+        if (userError || !user) {
+            DOM.chatNotice.textContent = 'ERRO: Faça login para enviar mensagens!';
+            return;
+        }
 
+        const name = currentUserName; 
+        const currentUserId = user.id;
+
+        const payload = { 
+            name, 
+            message: msg, 
+            user_id: currentUserId 
+        };
+        
+        let sent = false;
+        try {
+            // Envia para a API (Vercel/Edge Function)
+            const res = await fetch(API_CHAT, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok) {
+                sent = true;
+                DOM.chatMsg.value = '';
+                DOM.chatNotice.textContent = 'Mensagem enviada com sucesso.';
+                await loadChat();
+                return;
+            } else {
+                const errorData = await res.json();
+                console.error('API Chat Error:', errorData);
+                DOM.chatNotice.textContent = `ERRO API: ${errorData.message || 'Falha ao enviar.'}`;
+            }
+        } catch (e) {
+            console.error('Fetch/Network Error:', e);
+            DOM.chatNotice.textContent = 'ERRO DE REDE: Falha ao tentar enviar mensagem.';
+        }
+
+        // 2. Fallback local (se a API falhou)
+        if (!sent) {
+            const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+            local.push({ name, msg, at: Date.now() });
+            localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
+            DOM.chatMsg.value = '';
+            DOM.chatNotice.textContent = 'Chat offline - mensagem salva localmente';
+            loadChat();
+        }
+    }
+
+    // ======================================================================
+    // 5. RANKING
+    // ======================================================================
+
+    async function loadRanking() {
+        DOM.leaderboard.innerHTML = '';
+        DOM.rankNotice.textContent = 'Buscando ranking global...';
+        
+        try {
+            const res = await fetch(API_RANKING);
+            if (!res.ok) throw new Error('Falha ao buscar ranking da API');
+            
+            const ranks = await res.json();
+            
+            if (ranks.length === 0) {
+                DOM.rankNotice.textContent = 'Nenhum score ainda. Seja o primeiro!';
+                return;
+            }
+
+            ranks.forEach((rank, index) => {
+                const rankEntry = document.createElement('div');
+                rankEntry.className = 'rank-entry';
+                rankEntry.innerHTML = `
+                    <span class="pos">${index + 1}.</span>
+                    <span class="name">${rank.name}</span>
+                    <span class="score">${formatTime(rank.score)}</span>
+                `;
+                DOM.leaderboard.appendChild(rankEntry);
+            });
+            DOM.rankNotice.textContent = `Ranking Global (última atualização: ${new Date().toLocaleTimeString()})`;
+
+        } catch (e) {
+            console.error(e);
+            DOM.rankNotice.textContent = 'Falha ao carregar ranking global. Verifique a API.';
+            
+            // Tenta carregar localmente (se você tiver uma estrutura de fallback para ranking)
+            // (Não implementado neste código para foco no Supabase)
+        }
+    }
+
+
+    // ======================================================================
+    // 6. INICIALIZAÇÃO E LISTENERS
+    // ======================================================================
+
+    async function init() {
+        // Carrega o melhor tempo local
+        DOM.bestTimeDisplay.textContent = formatTime(bestTime);
+
+        // 1. Carrega a skin salva
+        loadSavedSkin(); 
+        
+        // 2. Tenta obter o usuário logado e carregar o perfil
+        const { data: { user } } = await supabaseWeb.auth.getUser();
+
+        if (user) {
+            await loadUserData(user);
+        } else {
+            handleLogout(); // Garante o estado 'Anon' correto
+        }
+        
+        // 3. Game Listeners
+        DOM.startBtn.addEventListener('click', startGame);
+        DOM.resetBtn.addEventListener('click', resetGame);
+        
+        // Listener de Skin
+        DOM.skinSelector.addEventListener('change', (e) => {
+            applySkin(e.target.value);
+            if (gameActive) resetGame();
+        });
+
+        // 4. Auth Listeners
+        DOM.signupBtn.addEventListener('click', () => handleAuth(true));
+        DOM.loginBtn.addEventListener('click', () => handleAuth(false));
+        DOM.logoutBtn.addEventListener('click', handleLogout);
+        
+        // 5. Chat Listeners
+        DOM.sendChatBtn.addEventListener('click', sendChat);
+        DOM.clearLocalChatBtn.addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_CHAT);
+            loadChat();
+        });
+        
+        // Enter key no input de chat
+        DOM.chatMsg.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChat();
+        });
+
+        // 6. Ranking Listeners
+        DOM.refreshRankBtn.addEventListener('click', loadRanking);
+
+        // 7. Polling e Carregamento Inicial
+        await loadRanking();
+        await loadChat();
+        setInterval(loadRanking, POLL_RANK_MS);
+        setInterval(loadChat, POLL_CHAT_MS);
+        
+        // 8. Tab Navigation
+        document.querySelectorAll('.tab-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                
+                button.classList.add('active');
+                $(button.dataset.tab).classList.add('active');
+            });
+        });
+        
+    }
+
+    init();
 </script>
 </body>
 </html>
