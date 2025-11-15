@@ -126,12 +126,17 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
         </div>
         <select id="difficultySelect" class="input">
             <option value="4x4">Fácil (4x4)</option>
-            <option value="5x4" selected>Médio (5x4)</option> <option value="6x4">Difícil (6x4)</option>
+            <option value="5x4" selected>Médio (5x4)</option>
+            <option value="6x4">Difícil (6x4)</option>
         </select>
         <button id="findMatchBtn" class="btn">Procurar Partida</button>
         <div id="matchStatus" class="chip" style="flex: 1 1 100%; color: var(--accent); display: none;">
             Status: Procurando Oponente...
         </div>
+        
+        <button id="startBtn" class="btn ghost" style="display: none;">Start Local</button>
+        <button id="resetBtn" class="btn ghost">Reset Local</button>
+    </div>
         
         <button id="startBtn" class="btn ghost" style="display: none;">Start Local</button>
         <button id="resetBtn" class="btn ghost">Reset Local</button>
@@ -652,4 +657,5 @@ supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(sessi
 </script>
 </body>
 </html>
+
 
