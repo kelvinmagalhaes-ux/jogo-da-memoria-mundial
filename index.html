@@ -1,528 +1,540 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-    <title>Idle Heroes: Ascension</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #1e1e2c;
-            --panel: #28283e;
-            --accent-gold: #ffc107;
-            --accent-purple: #9c27b0;
-            --accent-red: #f44336;
-            --text-light: #e0e0f0;
-            --text-muted: #a0a0b0;
-            --font: 'Roboto Mono', monospace;
-        }
-        * { box-sizing: border-box; }
-        body {
-            background: var(--bg);
-            color: var(--text-light);
-            font-family: var(--font);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 100%;
-            max-width: 900px;
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        .panel {
-            background: var(--panel);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-        }
-        h2 {
-            color: var(--accent-gold);
-            margin-top: 0;
-            border-bottom: 2px solid rgba(255, 193, 7, 0.2);
-            padding-bottom: 5px;
-            font-size: 1.2em;
-        }
-        .hud {
-            display: flex;
-            justify-content: space-around;
-            padding: 10px 0;
-            margin-bottom: 15px;
-            border-bottom: 1px solid var(--text-muted);
-        }
-        .resource {
-            font-size: 1.1em;
-            font-weight: 700;
-        }
-        .btn {
-            background: var(--accent-gold);
-            color: var(--bg);
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-family: inherit;
-            font-weight: 700;
-            transition: background 0.2s;
-            margin: 5px 0;
-            width: 100%;
-        }
-        .btn:hover:not(:disabled) { background: #ffeb3b; }
-        .btn:disabled { background: var(--text-muted); cursor: not-allowed; }
+// ======================================================================
+// IDLE HEROES: ASCENSION 2.0 - powered by Phaser.js
+// ======================================================================
 
-        /* Heróis */
-        .hero-list {
-            display: grid;
-            gap: 10px;
+// --- CONFIGURAÇÃO DO JOGO ---
+const config = {
+    type: Phaser.AUTO, // Phaser tenta usar WebGL, senão usa Canvas
+    width: 800,
+    height: 600,
+    parent: 'game-container', // ID do div onde o canvas do jogo será inserido
+    physics: {
+        default: 'arcade', // Sistema de física simples
+        arcade: {
+            debug: false // Altere para true para ver os bodies de colisão
         }
-        .hero-card {
-            background: #3a3a55;
-            padding: 10px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-left: 5px solid var(--accent-purple);
-        }
-        .hero-info {
-            flex-grow: 1;
-        }
-        .hero-name {
-            font-weight: 700;
-            color: var(--accent-purple);
-            font-size: 1.1em;
-        }
-        .hero-stats {
-            font-size: 0.9em;
-            color: var(--text-muted);
-        }
-        .upgrade-controls {
-            display: flex;
-            flex-direction: column;
-            width: 100px;
-            margin-left: 10px;
-        }
-        .upgrade-btn {
-            background: #4caf50;
-            color: white;
-            padding: 5px;
-        }
-        .upgrade-btn:hover:not(:disabled) { background: #81c784; }
+    },
+    scene: [BootScene, TitleScene, HeroSelectionScene, BattleScene], // Cenas do jogo
+    scale: {
+        mode: Phaser.Scale.FIT, // Ajusta o jogo à tela mantendo proporções
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
+    audio: {
+        disableWebAudio: false // Habilita o Web Audio API
+    }
+};
 
-        /* Gacha/Recrutamento */
-        .gacha-panel {
-            display: flex;
-            flex-direction: column;
-        }
-        .gacha-btn {
-            background: var(--accent-purple);
-            color: white;
-            margin-bottom: 10px;
-        }
-        .gacha-btn:hover:not(:disabled) { background: #e1bee7; }
-        .gacha-result {
-            margin-top: 10px;
-            padding: 8px;
-            border: 1px dashed var(--accent-gold);
-            border-radius: 4px;
-        }
-        .rarity-legendary { color: #f9d71c; font-weight: 700; }
-        .rarity-epic { color: var(--accent-purple); font-weight: 700; }
-        .rarity-rare { color: #2196f3; }
+let game = new Phaser.Game(config);
 
-        /* Batalha/Idle */
-        .battle-log {
-            height: 150px;
-            overflow-y: scroll;
-            background: #151520;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            margin-top: 10px;
-        }
-        .battle-entry {
-            margin-bottom: 3px;
-        }
-        .combat-btn {
-            background: var(--accent-red);
-            margin-top: 10px;
-        }
-        .combat-btn:hover:not(:disabled) { background: #e57373; }
+// --- CLASSE BASE PARA PERSONAGENS (HERÓI/INIMIGO) ---
+class Character extends Phaser.GameObjects.Sprite {
+    constructor(scene, x, y, texture, frame, name, maxHp, attack) {
+        super(scene, x, y, texture, frame);
+        scene.add.existing(this);
+        scene.physics.add.existing(this);
 
-        @media (min-width: 600px) {
-            .container {
-                grid-template-columns: 2fr 1fr;
-            }
-        }
-    </style>
-</head>
-<body>
-<div class="container">
-    <div class="main-column">
-        <div class="panel">
-            <h2>🌍 IDLE HEROES: ASCENSION</h2>
-            <div class="hud">
-                <div class="resource">💰 Ouro: <span id="gold">0</span></div>
-                <div class="resource">✨ XP: <span id="xp">0</span></div>
-                <div class="resource">💠 Gemas: <span id="gems">100</span></div>
-            </div>
-            
-            <div class="panel">
-                <h2>⚔️ Campanha & Idle</h2>
-                <p>Seus heróis estão automaticamente em combate na Campanha.</p>
-                <div class="resource">Ganha por Tick: +<span id="goldPerTick">1</span> Ouro | +<span id="xpPerTick">1</span> XP</div>
-                <button id="startBattleBtn" class="combat-btn">INICIAR COMBATE MANUAL (10s)</button>
-                <div class="battle-log" id="battleLog"></div>
-            </div>
-        </div>
+        this.name = name;
+        this.maxHp = maxHp;
+        this.currentHp = maxHp;
+        this.attack = attack;
+        this.isDead = false;
 
-        <div class="panel">
-            <h2>🦸 Seus Heróis (<span id="heroCount">0</span>/10)</h2>
-            <div class="hero-list" id="heroList">
-                </div>
-        </div>
-    </div>
+        // Configurações físicas (para simular ataques e movimento)
+        this.body.setCollideWorldBounds(true);
+        this.body.setImmovable(true); // Não é empurrado por outros objetos de física
 
-    <div class="sidebar-column">
-        <div class="panel gacha-panel">
-            <h2>🔮 Recrutamento (Gacha)</h2>
-            <p>Recrute novos heróis por 100 Gemas.</p>
-            <button id="gachaBtn" class="btn gacha-btn">Recrutar (1x)</button>
-            <div id="gachaResult" class="gacha-result">Resultado da última invocação.</div>
-        </div>
-        
-        <div class="panel">
-            <h2>🛍️ Loja (Upgrades)</h2>
-            <p>Aumente a velocidade de produção de recursos (Custo: 50 Ouro).</p>
-            <button id="speedUpgradeBtn" class="btn">Upgrade de Velocidade</button>
-            <div id="shopNotice" style="margin-top: 10px; color: var(--text-muted);">Próximo upgrade: 50 Ouro.</div>
-        </div>
-    </div>
-</div>
+        // Barra de vida
+        this.hpBar = scene.add.graphics();
+        this.updateHpBar();
 
-<script>
-    // -----------------------------------------------------------------
-    //  1. CONFIGURAÇÕES E DADOS DO JOGO
-    // -----------------------------------------------------------------
-
-    const RESOURCES = {
-        gold: 0,
-        xp: 0,
-        gems: 100
-    };
-
-    const HERO_DATA = [
-        { name: "Aurora", rarity: "Epic", base_attack: 10, base_hp: 50 },
-        { name: "Kael", rarity: "Rare", base_attack: 5, base_hp: 40 },
-        { name: "Evelyn", rarity: "Rare", base_attack: 6, base_hp: 35 },
-        { name: "Zenith", rarity: "Legendary", base_attack: 15, base_hp: 70 },
-        { name: "Gideon", rarity: "Epic", base_attack: 8, base_hp: 60 }
-    ];
-
-    const HERO_RARITY_CHANCES = {
-        Legendary: 0.05, // 5%
-        Epic: 0.25,      // 25%
-        Rare: 0.70       // 70%
-    };
-    
-    // Nível de recursos ganhos por tick (aumentado por upgrades)
-    let idleRate = {
-        gold: 1,
-        xp: 1
-    };
-
-    // Variáveis de Jogo
-    let heroes = [];
-    const MAX_HEROES = 10;
-    let tickIntervalId = null;
-    let upgradeCost = 50;
-
-    // -----------------------------------------------------------------
-    //  2. ELEMENTOS DO DOM
-    // -----------------------------------------------------------------
-
-    const $ = id => document.getElementById(id);
-
-    const DOM = {
-        gold: $('gold'),
-        xp: $('xp'),
-        gems: $('gems'),
-        goldPerTick: $('goldPerTick'),
-        xpPerTick: $('xpPerTick'),
-        heroList: $('heroList'),
-        heroCount: $('heroCount'),
-        gachaBtn: $('gachaBtn'),
-        gachaResult: $('gachaResult'),
-        startBattleBtn: $('startBattleBtn'),
-        battleLog: $('battleLog'),
-        speedUpgradeBtn: $('speedUpgradeBtn'),
-        shopNotice: $('shopNotice')
-    };
-
-    // -----------------------------------------------------------------
-    //  3. FUNÇÕES UTILITÁRIAS
-    // -----------------------------------------------------------------
-
-    /** Atualiza a exibição de todos os recursos na HUD. */
-    function updateResourcesUI() {
-        DOM.gold.textContent = RESOURCES.gold.toLocaleString();
-        DOM.xp.textContent = RESOURCES.xp.toLocaleString();
-        DOM.gems.textContent = RESOURCES.gems.toLocaleString();
-        DOM.goldPerTick.textContent = idleRate.gold;
-        DOM.xpPerTick.textContent = idleRate.xp;
-        
-        // Loja
-        DOM.shopNotice.textContent = `Próximo upgrade: ${upgradeCost} Ouro.`;
-        DOM.speedUpgradeBtn.disabled = RESOURCES.gold < upgradeCost;
+        // Animação inicial (ocioso)
+        this.play(`${texture}_idle`);
     }
 
-    /** Loga uma mensagem na área de combate. */
-    function logBattle(message, color = var(--text-light)) {
-        const entry = document.createElement('div');
-        entry.className = 'battle-entry';
-        entry.style.color = color;
-        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-        DOM.battleLog.prepend(entry); // Adiciona no topo
-        if (DOM.battleLog.children.length > 10) {
-            DOM.battleLog.removeChild(DOM.battleLog.lastChild); // Mantém no máximo 10
+    takeDamage(amount) {
+        this.currentHp -= amount;
+        if (this.currentHp <= 0) {
+            this.currentHp = 0;
+            this.isDead = true;
+            this.play(`${this.texture.key}_die`); // Animação de morte
+            this.on('animationcomplete', () => {
+                this.setVisible(false);
+                this.hpBar.setVisible(false);
+                this.destroy(); // Remove o sprite após a animação de morte
+            }, this);
+        } else {
+            this.scene.tweens.add({ // Efeito de "flash" ao tomar dano
+                targets: this,
+                alpha: 0.5,
+                duration: 100,
+                yoyo: true,
+                ease: 'Power1'
+            });
+        }
+        this.updateHpBar();
+        this.scene.sound.play('hit_sound'); // Som de impacto
+    }
+
+    dealDamage(target) {
+        if (!target.isDead) {
+            target.takeDamage(this.attack);
+            // Mostrar texto de dano
+            this.scene.showDamageText(target.x, target.y - 50, this.attack);
+            this.scene.sound.play('attack_sound'); // Som de ataque
         }
     }
 
-    /** Calcula os stats de um herói dado seu nível. */
-    function calculateHeroStats(hero) {
-        const multiplier = 1 + (hero.level - 1) * 0.15; // 15% de aumento por nível
-        return {
-            attack: Math.round(hero.base_attack * multiplier),
-            hp: Math.round(hero.base_hp * multiplier)
-        };
+    updateHpBar() {
+        this.hpBar.clear();
+        const barWidth = 60;
+        const barHeight = 8;
+        const barX = this.x - barWidth / 2;
+        const barY = this.y - this.displayHeight / 2 - 15;
+
+        // Fundo da barra
+        this.hpBar.fillStyle(0x000000, 0.5);
+        this.hpBar.fillRect(barX, barY, barWidth, barHeight);
+
+        // Preenchimento da barra (verde)
+        const hpPercent = this.currentHp / this.maxHp;
+        this.hpBar.fillStyle(0x00ff00, 0.8);
+        this.hpBar.fillRect(barX, barY, barWidth * hpPercent, barHeight);
     }
 
-    // -----------------------------------------------------------------
-    //  4. SISTEMA DE HERÓIS
-    // -----------------------------------------------------------------
+    preUpdate(time, delta) {
+        super.preUpdate(time, delta);
+        this.updateHpBar(); // Mantém a barra de vida atualizada
+    }
+}
 
-    /** Renderiza o cartão de um herói específico. */
-    function renderHeroCard(hero) {
-        const stats = calculateHeroStats(hero);
-        const nextLevelCost = hero.level * 100 + 50; // Custo progressivo
+// --- CLASSE ESPECÍFICA PARA HERÓIS ---
+class Hero extends Character {
+    constructor(scene, x, y, texture, frame, name, maxHp, attack, level) {
+        super(scene, x, y, texture, frame, name, maxHp, attack);
+        this.level = level;
+        this.setFlipX(true); // Virar para a direita
+    }
+}
 
-        const card = document.createElement('div');
-        card.className = 'hero-card';
-        card.innerHTML = `
-            <div class="hero-info">
-                <div class="hero-name rarity-${hero.rarity.toLowerCase()}">${hero.name} <small>(Lvl ${hero.level})</small></div>
-                <div class="hero-stats">
-                    HP: ${stats.hp} | ATK: ${stats.attack}
-                </div>
-                <div class="hero-stats">
-                    Custo Próx. Nível: ${nextLevelCost} Ouro & ${nextLevelCost} XP
-                </div>
-            </div>
-            <div class="upgrade-controls">
-                <button class="btn upgrade-btn" data-hero-id="${hero.id}">Subir Nível</button>
-            </div>
-        `;
-        
-        const upgradeBtn = card.querySelector('.upgrade-btn');
-        upgradeBtn.disabled = RESOURCES.gold < nextLevelCost || RESOURCES.xp < nextLevelCost;
-        upgradeBtn.addEventListener('click', () => upgradeHero(hero.id, nextLevelCost));
-        
-        return card;
+// --- CLASSE ESPECÍFICA PARA INIMIGOS ---
+class Enemy extends Character {
+    constructor(scene, x, y, texture, frame, name, maxHp, attack) {
+        super(scene, x, y, texture, frame, name, maxHp, attack);
+        this.setFlipX(false); // Virar para a esquerda
+    }
+}
+
+
+// ======================================================================
+// SCENA DE BOOT (Carregamento de Assets)
+// ======================================================================
+class BootScene extends Phaser.Scene {
+    constructor() {
+        super('Boot');
     }
 
-    /** Renderiza a lista completa de heróis. */
-    function renderHeroList() {
-        DOM.heroList.innerHTML = '';
-        heroes.forEach(hero => {
-            DOM.heroList.appendChild(renderHeroCard(hero));
+    preload() {
+        // Obter elementos da tela de carregamento
+        const loadingScreen = document.getElementById('loading-screen');
+        const loadingProgress = document.getElementById('loading-progress');
+        const loadingText = document.getElementById('loading-text');
+
+        // Eventos de progresso do carregamento
+        this.load.on('progress', (value) => {
+            loadingProgress.style.width = (value * 100) + '%';
+            loadingText.textContent = Math.round(value * 100) + '%';
         });
-        DOM.heroCount.textContent = `${heroes.length}/${MAX_HEROES}`;
-        DOM.gachaBtn.disabled = heroes.length >= MAX_HEROES || RESOURCES.gems < 100;
-        updateResourcesUI(); // Garante que a UI de recursos está sincronizada
+
+        this.load.on('complete', () => {
+            loadingScreen.style.display = 'none'; // Esconde a tela de carregamento
+        });
+
+        // --- CARREGAMENTO DE IMAGENS ---
+        this.load.image('battle_bg', 'assets/images/battle_bg.png'); // Imagem de fundo
+
+        // Carregar spritesheets para animações
+        // Supondo que 'hero_sprite.png' e 'enemy_sprite.png' são spritesheets
+        // Você precisará ajustar frameWidth e frameHeight conforme suas imagens
+        this.load.spritesheet('hero_sprite', 'assets/images/hero_sprite.png', { frameWidth: 64, frameHeight: 64 });
+        this.load.spritesheet('enemy_sprite', 'assets/images/enemy_sprite.png', { frameWidth: 64, frameHeight: 64 });
+
+        // --- CARREGAMENTO DE ÁUDIO ---
+        this.load.audio('attack_sound', 'assets/audio/attack_sound.mp3'); // Som de ataque
+        this.load.audio('hit_sound', 'assets/audio/hit_sound.mp3');     // Som de impacto (opcional, mas bom ter)
+        this.load.audio('bg_music', 'assets/audio/bg_music.mp3');       // Música de fundo (opcional)
     }
 
-    /** Tenta subir o nível de um herói. */
-    function upgradeHero(id, cost) {
-        const hero = heroes.find(h => h.id === id);
-        if (!hero) return;
+    create() {
+        // Cria as animações para os sprites
+        this.anims.create({
+            key: 'hero_sprite_idle',
+            frames: this.anims.generateFrameNumbers('hero_sprite', { start: 0, end: 3 }), // Ajuste os frames conforme seu spritesheet
+            frameRate: 8,
+            repeat: -1
+        });
+        this.anims.create({
+            key: 'hero_sprite_attack',
+            frames: this.anims.generateFrameNumbers('hero_sprite', { start: 4, end: 7 }), // Ajuste os frames
+            frameRate: 10,
+            repeat: 0
+        });
+        this.anims.create({
+            key: 'hero_sprite_die',
+            frames: this.anims.generateFrameNumbers('hero_sprite', { start: 8, end: 11 }), // Ajuste os frames
+            frameRate: 6,
+            repeat: 0
+        });
 
-        if (RESOURCES.gold >= cost && RESOURCES.xp >= cost) {
-            RESOURCES.gold -= cost;
-            RESOURCES.xp -= cost;
-            hero.level++;
-            logBattle(`${hero.name} subiu para o Nível ${hero.level}! ✨`, 'var(--accent-purple)');
-            renderHeroList();
-            saveGame();
+        this.anims.create({
+            key: 'enemy_sprite_idle',
+            frames: this.anims.generateFrameNumbers('enemy_sprite', { start: 0, end: 3 }), // Ajuste os frames
+            frameRate: 8,
+            repeat: -1
+        });
+        this.anims.create({
+            key: 'enemy_sprite_attack',
+            frames: this.anims.generateFrameNumbers('enemy_sprite', { start: 4, end: 7 }), // Ajuste os frames
+            frameRate: 10,
+            repeat: 0
+        });
+        this.anims.create({
+            key: 'enemy_sprite_die',
+            frames: this.anims.generateFrameNumbers('enemy_sprite', { start: 8, end: 11 }), // Ajuste os frames
+            frameRate: 6,
+            repeat: 0
+        });
+
+        this.scene.start('Title'); // Inicia a cena do título após carregar
+    }
+}
+
+
+// ======================================================================
+// SCENA DE TÍTULO (Tela Inicial)
+// ======================================================================
+class TitleScene extends Phaser.Scene {
+    constructor() {
+        super('Title');
+    }
+
+    create() {
+        this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 - 50, 'IDLE HEROES: ASCENSION', {
+            fontSize: '32px',
+            fill: '#ffd166'
+        }).setOrigin(0.5);
+
+        const startButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 50, 'INICIAR JORNADA', {
+            fontSize: '24px',
+            fill: '#7ce7c7',
+            backgroundColor: '#222'
+        }).setPadding(10).setOrigin(0.5).setInteractive();
+
+        startButton.on('pointerdown', () => {
+            this.scene.start('HeroSelection'); // Vai para a seleção de heróis
+        });
+    }
+}
+
+
+// ======================================================================
+// SCENA DE SELEÇÃO DE HERÓIS (Mockup)
+// ======================================================================
+class HeroSelectionScene extends Phaser.Scene {
+    constructor() {
+        super('HeroSelection');
+        this.selectedHeroes = [];
+        this.availableHeroes = []; // Heróis que o jogador possui
+    }
+
+    init(data) {
+        // Se houver dados passados, usa-os (por exemplo, heróis salvos)
+        if (data && data.playerHeroes) {
+            this.availableHeroes = data.playerHeroes;
         } else {
-            alert('Recursos insuficientes para subir o nível!');
+            // Heróis iniciais para teste se não houver jogo salvo
+            this.availableHeroes = [
+                { id: 1, name: "Aurora", texture: "hero_sprite", level: 1, base_attack: 10, base_hp: 100 },
+                { id: 2, name: "Kael", texture: "hero_sprite", level: 1, base_attack: 8, base_hp: 80 },
+                { id: 3, name: "Evelyn", texture: "hero_sprite", level: 1, base_attack: 12, base_hp: 70 }
+            ];
+        }
+        // Pré-seleciona os 3 primeiros heróis para a batalha
+        this.selectedHeroes = this.availableHeroes.slice(0, Math.min(3, this.availableHeroes.length));
+    }
+
+    create() {
+        this.add.text(this.cameras.main.width / 2, 50, 'Selecione seus Heróis (Max 3)', {
+            fontSize: '24px',
+            fill: '#ffd166'
+        }).setOrigin(0.5);
+
+        // Placeholder para a lista de heróis
+        this.add.text(this.cameras.main.width / 2, 150, 'HERÓIS DISPONÍVEIS AQUI (Cliques para selecionar/desselecionar)', {
+            fontSize: '16px',
+            fill: '#a0a0b0'
+        }).setOrigin(0.5);
+
+        this.displaySelectedHeroes();
+
+        const battleButton = this.add.text(this.cameras.main.width / 2, this.cameras.main.height - 80, 'IR PARA BATALHA', {
+            fontSize: '24px',
+            fill: '#7ce7c7',
+            backgroundColor: '#222'
+        }).setPadding(10).setOrigin(0.5).setInteractive();
+
+        battleButton.on('pointerdown', () => {
+            if (this.selectedHeroes.length > 0) {
+                this.scene.start('Battle', { playerHeroes: this.selectedHeroes });
+            } else {
+                alert('Selecione pelo menos um herói!');
+            }
+        });
+
+        // Adicionar um botão temporário para testar o Gacha e ter mais heróis
+        const gachaButton = this.add.text(this.cameras.main.width - 20, 20, 'Gacha (Teste)', {
+            fontSize: '16px',
+            fill: '#9c27b0',
+            backgroundColor: '#222'
+        }).setOrigin(1, 0).setPadding(5).setInteractive();
+
+        gachaButton.on('pointerdown', () => {
+            // Lógica simplificada de gacha para adicionar um novo herói
+            const newHero = {
+                id: Date.now(),
+                name: "Novo Recruta",
+                texture: "hero_sprite",
+                level: 1,
+                base_attack: 7 + Math.floor(Math.random() * 5),
+                base_hp: 70 + Math.floor(Math.random() * 30)
+            };
+            this.availableHeroes.push(newHero);
+            alert(`Você recrutou: ${newHero.name}!`);
+            this.displaySelectedHeroes(); // Atualiza a exibição
+        });
+    }
+
+    // Função para exibir visualmente os heróis selecionados (melhoria futura: sprites clicáveis)
+    displaySelectedHeroes() {
+        // Limpa qualquer exibição anterior de heróis selecionados
+        if (this.selectedDisplayGroup) {
+            this.selectedDisplayGroup.destroy(true);
+        }
+        this.selectedDisplayGroup = this.add.group();
+
+        this.add.text(this.cameras.main.width / 2, 250, 'Time Selecionado:', {
+            fontSize: '18px',
+            fill: '#e0e0f0'
+        }).setOrigin(0.5);
+
+        this.selectedHeroes.forEach((hero, index) => {
+            const xPos = this.cameras.main.width / 2 - 100 + (index * 100);
+            const yPos = 300;
+            const heroSprite = this.add.sprite(xPos, yPos, hero.texture).setScale(1.5);
+            heroSprite.setInteractive();
+            heroSprite.on('pointerdown', () => {
+                // Ao clicar, remove/adiciona da seleção (muito simples, sem UI visual de seleção)
+                const existingIndex = this.selectedHeroes.findIndex(h => h.id === hero.id);
+                if (existingIndex > -1) {
+                    this.selectedHeroes.splice(existingIndex, 1);
+                } else if (this.selectedHeroes.length < 3) {
+                    this.selectedHeroes.push(hero);
+                }
+                this.displaySelectedHeroes(); // Re-renderiza a lista selecionada
+            });
+            this.selectedDisplayGroup.add(heroSprite);
+            this.selectedDisplayGroup.add(this.add.text(xPos, yPos + 40, hero.name, { fontSize: '12px', fill: '#fff' }).setOrigin(0.5));
+        });
+    }
+}
+
+
+// ======================================================================
+// SCENA DE BATALHA (Onde a Magia Acontece)
+// ======================================================================
+class BattleScene extends Phaser.Scene {
+    constructor() {
+        super('Battle');
+        this.playerHeroes = [];
+        this.enemies = [];
+        this.isBattleActive = false;
+        this.battleTimerEvent = null; // Para o loop de combate
+        this.music = null; // Para a música de fundo
+        this.soundEnabled = true; // Estado do som
+    }
+
+    init(data) {
+        if (data && data.playerHeroes) {
+            this.playerHeroesData = data.playerHeroes;
+        } else {
+            // Heróis padrão se não vierem da seleção
+            this.playerHeroesData = [
+                { id: 1, name: "Aurora", texture: "hero_sprite", level: 1, base_attack: 10, base_hp: 100 },
+            ];
         }
     }
 
-    // -----------------------------------------------------------------
-    //  5. SISTEMA DE RECRUTAMENTO (GACHA)
-    // -----------------------------------------------------------------
+    create() {
+        this.add.image(400, 300, 'battle_bg').setDisplaySize(config.width, config.height);
 
-    /** Executa a invocação Gacha. */
-    function performGacha() {
-        if (RESOURCES.gems < 100) {
-            DOM.gachaResult.textContent = '❌ Gemas insuficientes! Custa 100 Gemas.';
-            return;
-        }
-        if (heroes.length >= MAX_HEROES) {
-            DOM.gachaResult.textContent = '❌ Limite de heróis atingido! Desmonte alguns.';
-            return;
-        }
+        this.setupUI(); // Configura HUD e controles
+        this.setupAudio(); // Configura música e som
 
-        RESOURCES.gems -= 100;
+        // Instanciar heróis
+        const heroPositions = [
+            { x: 150, y: 350 },
+            { x: 180, y: 450 },
+            { x: 120, y: 250 }
+        ];
+        this.playerHeroesData.forEach((heroData, index) => {
+            if (index < heroPositions.length) {
+                const { x, y } = heroPositions[index];
+                const hero = new Hero(this, x, y, heroData.texture, 0, heroData.name, heroData.base_hp * heroData.level, heroData.base_attack * heroData.level, heroData.level);
+                this.playerHeroes.push(hero);
+            }
+        });
 
-        const rand = Math.random();
-        let selectedRarity = 'Rare';
-        let cumulativeChance = 0;
+        // Instanciar inimigos (mais complexo para N inimigos)
+        const enemy = new Enemy(this, 650, 350, 'enemy_sprite', 0, 'Evil Ogre', 500, 20);
+        this.enemies.push(enemy);
 
-        // Determina a raridade
-        for (const rarity in HERO_RARITY_CHANCES) {
-            cumulativeChance += HERO_RARITY_CHANCES[rarity];
-            if (rand < cumulativeChance) {
-                selectedRarity = rarity;
-                break;
+        this.isBattleActive = true;
+        this.startCombatLoop();
+    }
+
+    setupUI() {
+        // Botão para retornar à seleção de heróis
+        const backButton = this.add.text(20, 20, '<< VOLTAR', {
+            fontSize: '16px',
+            fill: '#fff',
+            backgroundColor: '#555'
+        }).setPadding(5).setInteractive();
+        backButton.on('pointerdown', () => {
+            this.stopAudio();
+            this.scene.start('HeroSelection', { playerHeroes: this.playerHeroesData }); // Passa heróis de volta
+        });
+
+        // Botão de toggle de som
+        const soundButton = this.add.text(config.width - 20, 20, '🔊', {
+            fontSize: '20px',
+            fill: '#fff',
+            backgroundColor: '#555'
+        }).setOrigin(1, 0).setPadding(5).setInteractive();
+        soundButton.on('pointerdown', () => {
+            this.toggleSound();
+            soundButton.setText(this.soundEnabled ? '🔊' : '🔇');
+        });
+    }
+
+    setupAudio() {
+        if (!this.music) {
+            this.music = this.sound.add('bg_music', { loop: true, volume: 0.3 });
+            if (this.soundEnabled) {
+                this.music.play();
             }
         }
-
-        const availableHeroes = HERO_DATA.filter(h => h.rarity === selectedRarity);
-        if (availableHeroes.length === 0) return; // Segurança
-
-        const newHeroData = availableHeroes[Math.floor(Math.random() * availableHeroes.length)];
-
-        // Cria o novo herói
-        const newHero = {
-            id: Date.now() + Math.random(), // ID único
-            ...newHeroData,
-            level: 1,
-        };
-
-        heroes.push(newHero);
-        
-        // Atualiza a UI
-        DOM.gachaResult.innerHTML = `🎉 Você recrutou: <span class="rarity-${selectedRarity.toLowerCase()}">${newHero.name} (${selectedRarity})</span>!`;
-        logBattle(`Novo Herói Recrutado: ${newHero.name} (${selectedRarity})`, 'var(--accent-gold)');
-        renderHeroList();
-        saveGame();
+        // Os sons de ataque e hit são carregados no boot e reproduzidos diretamente
     }
-    
-    // -----------------------------------------------------------------
-    //  6. SISTEMA IDLE E COMBATE
-    // -----------------------------------------------------------------
-    
-    /** Função principal de tick (a cada segundo). */
-    function idleTick() {
-        RESOURCES.gold += idleRate.gold;
-        RESOURCES.xp += idleRate.xp;
-        updateResourcesUI();
-    }
-    
-    /** Simula um combate manual (duração de 10 segundos). */
-    function startManualCombat() {
-        if (heroes.length === 0) {
-            logBattle('❌ Recrute um herói primeiro!', 'var(--accent-red)');
-            return;
-        }
 
-        DOM.startBattleBtn.disabled = true;
-        DOM.startBattleBtn.textContent = 'Em Combate...';
-        logBattle('Iniciando Combate Manual! 💥', 'var(--accent-red)');
-        
-        let combatTimer = 10;
-        const totalHeroAttack = heroes.reduce((sum, h) => sum + calculateHeroStats(h).attack, 0);
-        const enemyHP = 500 * (heroes.length + 1); // Inimigo fica mais forte
-
-        const combatInterval = setInterval(() => {
-            combatTimer--;
-            logBattle(`Inimigo sofreu ${totalHeroAttack} de dano! Restante: ${enemyHP - (10 - combatTimer) * totalHeroAttack}`, 'var(--text-muted)');
-            
-            if (combatTimer <= 0) {
-                clearInterval(combatInterval);
-                const goldReward = Math.round(enemyHP / 10 + Math.random() * 50);
-                const xpReward = Math.round(enemyHP / 20 + Math.random() * 50);
-                
-                RESOURCES.gold += goldReward;
-                RESOURCES.xp += xpReward;
-                logBattle(`✅ VITÓRIA! Recompensa: ${goldReward} Ouro, ${xpReward} XP!`, 'var(--accent-gold)');
-
-                DOM.startBattleBtn.disabled = false;
-                DOM.startBattleBtn.textContent = 'INICIAR COMBATE MANUAL (10s)';
-                saveGame();
+    toggleSound() {
+        this.soundEnabled = !this.soundEnabled;
+        if (this.soundEnabled) {
+            this.sound.mute = false;
+            if (this.music && !this.music.isPlaying) {
+                this.music.play();
             }
-        }, 1000);
-    }
-    
-    /** Tenta fazer o upgrade de velocidade global. */
-    function upgradeIdleSpeed() {
-        if (RESOURCES.gold >= upgradeCost) {
-            RESOURCES.gold -= upgradeCost;
-            idleRate.gold += 1; // Aumenta 1 por tick
-            idleRate.xp += 1;
-            upgradeCost = Math.round(upgradeCost * 1.5); // Aumenta o custo
-            logBattle(`Upgrade de Velocidade! Ganho por tick: +${idleRate.gold}`, 'var(--accent-gold)');
-            updateResourcesUI();
-            saveGame();
-        }
-    }
-
-    // -----------------------------------------------------------------
-    //  7. SALVAR/CARREGAR JOGO
-    // -----------------------------------------------------------------
-
-    function saveGame() {
-        const gameState = {
-            resources: RESOURCES,
-            heroes: heroes,
-            idleRate: idleRate,
-            upgradeCost: upgradeCost
-        };
-        localStorage.setItem('idleHeroesSave', JSON.stringify(gameState));
-    }
-
-    function loadGame() {
-        const savedGame = localStorage.getItem('idleHeroesSave');
-        if (savedGame) {
-            const gameState = JSON.parse(savedGame);
-            Object.assign(RESOURCES, gameState.resources);
-            heroes = gameState.heroes;
-            idleRate = gameState.idleRate;
-            upgradeCost = gameState.upgradeCost;
-            logBattle('Jogo carregado com sucesso!');
         } else {
-            logBattle('Novo jogo iniciado!');
+            this.sound.mute = true;
         }
     }
 
-    // -----------------------------------------------------------------
-    //  8. INICIALIZAÇÃO
-    // -----------------------------------------------------------------
-
-    function init() {
-        // 1. Carregar jogo e iniciar tick
-        loadGame();
-        tickIntervalId = setInterval(idleTick, 1000); // Roda a cada 1 segundo
-
-        // 2. Renderizar UI inicial
-        renderHeroList();
-        updateResourcesUI();
-        
-        // 3. Conectar Eventos
-        DOM.gachaBtn.addEventListener('click', performGacha);
-        DOM.startBattleBtn.addEventListener('click', startManualCombat);
-        DOM.speedUpgradeBtn.addEventListener('click', upgradeIdleSpeed);
-        
-        // 4. Salvar periodicamente
-        setInterval(saveGame, 5000); // Salva a cada 5 segundos
+    stopAudio() {
+        if (this.music && this.music.isPlaying) {
+            this.music.stop();
+        }
     }
 
-    init();
-</script>
-</body>
-</html>
+    startCombatLoop() {
+        // O loop de combate acontece a cada 1 segundo (como um jogo idle)
+        this.battleTimerEvent = this.time.addEvent({
+            delay: 1000,
+            callback: this.performCombatRound,
+            callbackScope: this,
+            loop: true
+        });
+    }
+
+    performCombatRound() {
+        if (!this.isBattleActive) return;
+
+        // Heróis atacam inimigos
+        this.playerHeroes.forEach(hero => {
+            if (!hero.isDead && this.enemies.some(e => !e.isDead)) {
+                hero.play(`${hero.texture.key}_attack`); // Animação de ataque
+                hero.on('animationcomplete', () => {
+                    hero.play(`${hero.texture.key}_idle`); // Volta para idle
+                    const target = this.enemies.find(e => !e.isDead); // Primeiro inimigo vivo
+                    if (target) hero.dealDamage(target);
+                }, this, true); // O 'true' garante que o evento é removido após a primeira vez
+            }
+        });
+
+        // Inimigos atacam heróis
+        this.enemies.forEach(enemy => {
+            if (!enemy.isDead && this.playerHeroes.some(h => !h.isDead)) {
+                enemy.play(`${enemy.texture.key}_attack`); // Animação de ataque
+                enemy.on('animationcomplete', () => {
+                    enemy.play(`${enemy.texture.key}_idle`); // Volta para idle
+                    const target = this.playerHeroes.find(h => !h.isDead); // Primeiro herói vivo
+                    if (target) enemy.dealDamage(target);
+                }, this, true);
+            }
+        });
+
+        this.checkBattleEnd();
+    }
+
+    checkBattleEnd() {
+        const allHeroesDead = this.playerHeroes.every(h => h.isDead);
+        const allEnemiesDead = this.enemies.every(e => e.isDead);
+
+        if (allHeroesDead) {
+            this.isBattleActive = false;
+            this.battleTimerEvent.destroy();
+            this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'DERROTA!', {
+                fontSize: '48px',
+                fill: '#f44336'
+            }).setOrigin(0.5);
+            console.log('Todos os heróis morreram!');
+        } else if (allEnemiesDead) {
+            this.isBattleActive = false;
+            this.battleTimerEvent.destroy();
+            this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2, 'VITÓRIA!', {
+                fontSize: '48px',
+                fill: '#4CAF50'
+            }).setOrigin(0.5);
+            // Implementar recompensas aqui
+            console.log('Todos os inimigos foram derrotados!');
+        }
+    }
+
+    // Função para exibir texto de dano flutuante
+    showDamageText(x, y, damage) {
+        const damageText = this.add.text(x, y, `-${damage}`, {
+            fontSize: '20px',
+            fill: '#f44336',
+            stroke: '#000',
+            strokeThickness: 4
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: damageText,
+            y: y - 50, // Move para cima
+            alpha: 0, // Desaparece
+            duration: 1000,
+            ease: 'Power1',
+            onComplete: () => {
+                damageText.destroy(); // Remove o texto após a animação
+            }
+        });
+    }
+}
