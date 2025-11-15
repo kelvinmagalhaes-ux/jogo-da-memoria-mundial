@@ -630,29 +630,35 @@ tabRankBtn.addEventListener('click', () => showTab('rankPanel')); 
 tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
 
 
-/* ---------- INIT ---------- */
+/* ---------- INIT (CORRIGIDO PARA GARANTIR CARREGAMENTO DO DOM) ---------- */
 function init() {
-    createGrid(); 
-    // Verifica se há um nome salvo localmente para inicializar o display
-    playerHUD.textContent = currentUserName; 
+    // Verifica se há um nome salvo localmente para inicializar o display
+    playerHUD.textContent = currentUserName; 
     playerNameDisplay.textContent = currentUserName;
     chatNameDisplay.textContent = `@${currentUserName}`;
+
+    // Apenas garante que o botão "Início" fique visualmente ativo
+    // O painel já tem a classe 'active' no HTML.
+    document.getElementById('tabAppBtn').classList.add('active');
+
+    // Inicializa o jogo (Cria as cartas)
+    createGrid(); 
 
     loadChat(); 
     loadRanking();
     setInterval(loadChat, POLL_CHAT_MS);
     setInterval(loadRanking, POLL_RANK_MS);
 
-    // Inicializa a aba principal
-    showTab('mainApp'); 
-
     // Inicializa a UI de autenticação
     supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
 }
 
-init();
+// Garante que o INIT seja chamado após o DOM ser totalmente carregado,
+// o que previne que o código tente manipular elementos que ainda não existem.
+document.addEventListener('DOMContentLoaded', init);
 
 </script>
 </body>
 </html>
+
 
