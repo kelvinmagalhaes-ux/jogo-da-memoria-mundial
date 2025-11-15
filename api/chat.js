@@ -1,6 +1,6 @@
 // /api/chat.js (Nova Versão com Supabase)
 
-import { supabase } from '../lib/supabaseClient'; // Garanta que o caminho para a conexão está correto
+import { supabase } from '../supabaseClient'; // Garanta que o caminho para a conexão está correto
 
 export default async function handler(req, res) { 
   try {
