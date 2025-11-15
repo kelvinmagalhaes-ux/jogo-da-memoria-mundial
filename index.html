@@ -52,46 +52,100 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 @media (max-width:520px){
   :root{--cols:3}
 }
+/* Novo CSS para abas */
+.tab-header {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.tab-btn {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px 8px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.tab-btn.active {
+    color: var(--accent);
+    background: var(--panel);
+}
+.tab-content {
+    padding: 8px;
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 0 0 10px 10px;
+    border-top: none; /* Remove a borda superior para conectar ao header */
+    background: var(--panel);
+}
+.tab-panel:not(.active) {
+    display: none;
+}
+.auth-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 </style>
 </head>
 <body>
 <div class="container">
   <div class="panel">
-    <div class="header">
-      <div>
-        <div class="title">PIXEL RPG MEMORY</div>
-        <div class="sub">Pixel-art moderno • Mobile-first</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
-      </div>
-    </div>
 
-    <div class="hud">
-      <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
-      <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
-      <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
-      <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
-    </div>
+    <div class="tab-header">
+        <button id="tabAppBtn" class="tab-btn active">🕹️ Início</button>
+        <button id="tabAuthBtn" class="tab-btn">🔒 Login/Cadastro</button>
+    </div>
 
-    <div id="grid" class="grid"></div>
+    <div id="mainApp" class="tab-panel active">
+        <div class="header">
+          <div>
+            <div class="title">PIXEL RPG MEMORY</div>
+            <div class="sub">Pixel-art moderno • Mobile-first</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
+          </div>
+        </div>
 
-    <div class="controls">
-      <input id="playerName" class="input" placeholder="@seunome" />
-      <input id="userEmail" class="input" placeholder="E-mail" />
-      <input id="userPassword" class="input" type="password" placeholder="Senha" />
-      <button id="signUpBtn" class="btn ghost">Cadastrar</button>
-      <button id="signInBtn" class="btn">Login</button>
-      <select id="skinSelect" class="input">
-        <option value="plain">Classic</option>
-        <option value="darker">Darker</option>
-        <option value="neon">Neon</option>
-      </select>
-      <button id="startBtn" class="btn">Start</button>
-      <button id="resetBtn" class="btn ghost">Reset</button>
-    </div>
+        <div class="hud">
+          <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
+          <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
+          <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
+          <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
+        </div>
 
-    <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
+        <div id="grid" class="grid"></div>
+
+        <div class="controls">
+          <input id="playerName" class="input" placeholder="@seunome" />
+          <select id="skinSelect" class="input">
+            <option value="plain">Classic</option>
+            <option value="darker">Darker</option>
+            <option value="neon">Neon</option>
+          </select>
+          <button id="startBtn" class="btn">Start</button>
+          <button id="resetBtn" class="btn ghost">Reset</button>
+        </div>
+
+        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
+    </div>
+
+    <div id="authPanel" class="tab-panel">
+        <div class="auth-controls">
+            <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
+            <div id="authState" class="chip" style="color: var(--accent2);"></div>
+            <input id="userEmail" class="input" placeholder="E-mail" />
+            <input id="userPassword" class="input" type="password" placeholder="Senha" />
+            <div style="display:flex; gap: 8px;">
+                <button id="signInBtn" class="btn" style="flex:1">Login</button>
+                <button id="signUpBtn" class="btn ghost" style="flex:1">Cadastrar</button>
+            </div>
+            <button id="signOutBtn" class="btn ghost" style="background: #a82e2e; color: white;">Sair (Logout)</button>
+        </div>
+    </div>
   </div>
 
   <div class="side-column">
@@ -165,6 +219,17 @@ const refreshRank = document.getElementById('refreshRank');
 const clearChatBtn = document.getElementById('clearChat');
 const rankNotice = document.getElementById('rankNotice');
 
+// Novos elementos de Auth e Abas
+const authStateEl = document.getElementById('authState');
+const tabAppBtn = document.getElementById('tabAppBtn');
+const tabAuthBtn = document.getElementById('tabAuthBtn');
+const mainAppPanel = document.getElementById('mainApp');
+const authPanel = document.getElementById('authPanel');
+const signUpBtn = document.getElementById('signUpBtn');
+const signInBtn = document.getElementById('signInBtn');
+const signOutBtn = document.getElementById('signOutBtn');
+
+
 /* ---------- STATE ---------- */
 let cards = [], first=null, second=null, lock=false, matches=0, attempts=0;
 let timer=0, timerId=null, started=false;
@@ -189,6 +254,17 @@ computeCardSize();
 function formatTime(s){const m=Math.floor(s/60); const sec=s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---------- ABAS ---------- */
+function showTab(tabId) {
+    // Esconde todos os painéis e remove o active de todos os botões
+    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+    // Mostra o painel correto e ativa o botão
+    document.getElementById(tabId).classList.add('active');
+    document.getElementById(`tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}Btn`).classList.add('active');
+}
 
 /* ---------- GRID ---------- */
 function createGrid(){
@@ -258,6 +334,20 @@ async function handleWin(){
 }
 
 /* ---------- AUTENTICAÇÃO (LOGIN/CADASTRO) ---------- */
+function updateAuthUI(user) {
+    if (user) {
+        authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
+        signOutBtn.style.display = 'block';
+        signUpBtn.style.display = 'none';
+        signInBtn.style.display = 'none';
+    } else {
+        authStateEl.textContent = 'Status: Desconectado';
+        signOutBtn.style.display = 'none';
+        signUpBtn.style.display = 'inline-block';
+        signInBtn.style.display = 'inline-block';
+    }
+}
+
 async function handleAuth(isSignUp) {
     const emailEl = document.getElementById('userEmail');
     const passwordEl = document.getElementById('userPassword');
@@ -289,9 +379,6 @@ async function handleAuth(isSignUp) {
     // Se for cadastro (Sign Up) e for bem-sucedido, insere o NOME do jogador na tabela 'users'
     if (isSignUp && authResult.data.user) {
         const userId = authResult.data.user.id;
-        // NOTA: Esta inserção pode falhar se o RLS for muito restritivo.
-        // Se falhar, você deve usar a API do Vercel para inserir o nome,
-        // mas vamos tentar diretamente no Front-End para simplicidade.
         const { error: insertError } = await supabaseWeb
             .from('users')
             .insert([{ id: userId, name: playerName }]);
@@ -302,8 +389,21 @@ async function handleAuth(isSignUp) {
     }
 
     alert(`Sucesso! Usuário logado: ${email}`);
-    // Recarrega o chat para tentar enviar mensagens
+    // Recarrega a UI de autenticação e o chat
+    supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
     loadChat(); 
+    showTab('mainApp'); // Volta para a tela principal
+}
+
+async function handleSignOut() {
+    const { error } = await supabaseWeb.auth.signOut();
+    if (error) {
+        alert(`Erro ao sair: ${error.message}`);
+        return;
+    }
+    alert('Desconectado com sucesso!');
+    updateAuthUI(null);
+    loadChat(); // Atualiza o chat, que agora vai mostrar a mensagem de "faça login"
 }
 
 /* ---------- CHAT (Integração Supabase) ---------- */
@@ -417,14 +517,22 @@ chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 refreshRank.addEventListener('click', ()=>loadRanking());
 clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
 
-// Conecta os novos botões de Autenticação
-document.getElementById('signUpBtn').addEventListener('click', () => handleAuth(true)); 
-document.getElementById('signInBtn').addEventListener('click', () => handleAuth(false));
+// Conecta os botões de Autenticação e Abas
+signUpBtn.addEventListener('click', () => handleAuth(true)); 
+signInBtn.addEventListener('click', () => handleAuth(false));
+signOutBtn.addEventListener('click', handleSignOut);
+tabAppBtn.addEventListener('click', () => showTab('mainApp'));
+tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
+
 
 /* ---------- INIT ---------- */
 createGrid(); loadChat(); loadRanking();
 setInterval(loadChat, POLL_CHAT_MS);
 setInterval(loadRanking, POLL_RANK_MS);
+
+// Inicializa a UI de autenticação
+supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
+
 </script>
 </body>
 </html>
