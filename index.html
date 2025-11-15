@@ -11,9 +11,9 @@
   --gap:10px; --cols:4; --card-max:96px;
 }
 *{box-sizing:border-box}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018);font-family:'Press Start 2P', monospace;color:#eaf2ff;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
+html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018);font-family:'Press Start 2P', monospace;color:#eaf2ff;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; font-size: 10px; /* Base da fonte ajustada para mobile */ }
 
-/* CORREÇÃO: Container principal com apenas uma coluna para as abas */
+/* Container principal com apenas uma coluna para as abas */
 .container{max-width:760px;margin:14px auto;padding:12px;display:grid;grid-template-columns:1fr;gap:16px}
 .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -22,7 +22,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 
 /* HUD */
 .hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.chip{background:#07131a;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:11px;color:var(--muted)}
+.chip{background:#07131a;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:11px;color:var(--muted); white-space: nowrap;}
 
 /* Grid responsive: use CSS variable --card-size set by JS */
 .grid{display:grid;grid-template-columns:repeat(var(--cols), var(--card-size));gap:var(--gap);justify-content:center;padding:8px;background:linear-gradient(180deg,#04121a,#071426);border-radius:8px}
@@ -33,7 +33,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 .face.front{background:repeating-linear-gradient(45deg,#08131a,#08131a 6px,#0b1a24 6px);color:#bcd7ff}
 .face.back{background:linear-gradient(180deg,#2b163a,#151028);color:var(--accent2);transform:rotateY(180deg)}
 
-/* CONTROLES CORRIGIDOS */
+/* CONTROLES */
 .controls{
     display: flex;
     flex-direction: row; 
@@ -51,6 +51,16 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
     flex-shrink: 0; 
     font-size: 11px; 
 }
+.input {
+    flex-grow: 1; /* Permite que o input preencha o espaço máximo */
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    background: #040e16;
+    color: var(--accent2);
+    font-family: 'Press Start 2P', monospace;
+    min-width: 80px; 
+}
 .btn{background:var(--accent);color:#071018;border:none;padding:8px 12px;border-radius:8px;font-weight:700;cursor:pointer}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent)}
 
@@ -66,10 +76,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 
 /* small */
 .footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
-@media (max-width:520px){
-  :root{--cols:3}
-}
-/* CSS para abas (AJUSTADO) */
+/* CSS para abas */
 .tab-header {
     display: flex;
     gap: 8px;
@@ -101,6 +108,35 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+/* REGRAS CRÍTICAS PARA MOBILE */
+@media (max-width: 520px) {
+    :root { 
+        --cols: 3; 
+    }
+    
+    /* Reduz a fonte geral em mobile para caber tudo */
+    html, body {
+        font-size: 8px; 
+    }
+    
+    /* Reduz a fonte para todos os textos menores (chips, tabs, sub, footer) */
+    .chip, .tab-btn, .sub, .footer, .controls .chip, .title {
+        font-size: 9px !important; 
+    }
+    
+    /* Garante que o input e botões sejam menores para caber */
+    .input, select, .btn {
+        font-size: 9px !important;
+        padding: 8px !important; /* Padding menor */
+    }
+
+    /* Ajusta o espaçamento da barra HUD */
+    .hud {
+        gap: 6px; 
+        margin-bottom: 8px;
+    }
 }
 </style>
 </head>
@@ -159,9 +195,9 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
                 <button id="clearChat" class="btn ghost" style="padding:6px">Limpar Local</button>
             </div>
             <div id="chatWindow" class="chat-window"></div>
-            <div style="display:flex;gap:8px;margin-top:8px">
+                        <div style="display:flex;gap:8px;margin-top:8px">
                 <span class="chip" id="chatNameDisplay" style="flex-shrink: 0; padding: 10px;">@Anon</span>
-                <input id="chatMsg" class="input" placeholder="Mensagem..." />
+                <input id="chatMsg" class="input" style="flex: 1;" placeholder="Mensagem..." />
                 <button id="chatSend" class="btn">Enviar</button>
             </div>
             <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
@@ -279,7 +315,8 @@ function computeCardSize(){
   const containerWidth = Math.min(window.innerWidth - 40, 720); // keep some margin
   const cols = window.innerWidth <= 520 ? 3 : 4;
   document.documentElement.style.setProperty('--cols', cols);
-  const gap = 10;
+  const gap = window.innerWidth <= 520 ? 8 : 10; // Gap menor no mobile
+  document.documentElement.style.setProperty('--gap', gap + 'px');
   const w = Math.floor((containerWidth - (cols-1)*gap - 16) / cols);
   const size = Math.max(56, Math.min(w, 110));
   document.documentElement.style.setProperty('--card-size', size + 'px');
