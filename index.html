@@ -1,626 +1,528 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<title>Pixel RPG Memory — Mobile Friendly</title>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-<style>
-:root{
-  --bg:#071017; --panel:#0e1622; --accent:#ffd166; --accent2:#7ce7c7; --muted:#9aa7bf;
-  --gap:10px; --cols:4; --card-max:96px;
-}
-*{box-sizing:border-box}
-html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018);font-family:'Press Start 2P', monospace;color:#eaf2ff;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Idle Heroes: Ascension</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1e1e2c;
+            --panel: #28283e;
+            --accent-gold: #ffc107;
+            --accent-purple: #9c27b0;
+            --accent-red: #f44336;
+            --text-light: #e0e0f0;
+            --text-muted: #a0a0b0;
+            --font: 'Roboto Mono', monospace;
+        }
+        * { box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text-light);
+            font-family: var(--font);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .panel {
+            background: var(--panel);
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        h2 {
+            color: var(--accent-gold);
+            margin-top: 0;
+            border-bottom: 2px solid rgba(255, 193, 7, 0.2);
+            padding-bottom: 5px;
+            font-size: 1.2em;
+        }
+        .hud {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--text-muted);
+        }
+        .resource {
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+        .btn {
+            background: var(--accent-gold);
+            color: var(--bg);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 700;
+            transition: background 0.2s;
+            margin: 5px 0;
+            width: 100%;
+        }
+        .btn:hover:not(:disabled) { background: #ffeb3b; }
+        .btn:disabled { background: var(--text-muted); cursor: not-allowed; }
 
-/* CORREÇÃO: Container principal com apenas uma coluna para as abas */
-.container{max-width:760px;margin:14px auto;padding:12px;display:grid;grid-template-columns:1fr;gap:16px}
-.panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
-.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.title{color:var(--accent);font-size:12px}
-.sub{color:var(--muted);font-size:10px}
+        /* Heróis */
+        .hero-list {
+            display: grid;
+            gap: 10px;
+        }
+        .hero-card {
+            background: #3a3a55;
+            padding: 10px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--accent-purple);
+        }
+        .hero-info {
+            flex-grow: 1;
+        }
+        .hero-name {
+            font-weight: 700;
+            color: var(--accent-purple);
+            font-size: 1.1em;
+        }
+        .hero-stats {
+            font-size: 0.9em;
+            color: var(--text-muted);
+        }
+        .upgrade-controls {
+            display: flex;
+            flex-direction: column;
+            width: 100px;
+            margin-left: 10px;
+        }
+        .upgrade-btn {
+            background: #4caf50;
+            color: white;
+            padding: 5px;
+        }
+        .upgrade-btn:hover:not(:disabled) { background: #81c784; }
 
-/* HUD */
-.hud{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.chip{background:#07131a;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:11px;color:var(--muted)}
+        /* Gacha/Recrutamento */
+        .gacha-panel {
+            display: flex;
+            flex-direction: column;
+        }
+        .gacha-btn {
+            background: var(--accent-purple);
+            color: white;
+            margin-bottom: 10px;
+        }
+        .gacha-btn:hover:not(:disabled) { background: #e1bee7; }
+        .gacha-result {
+            margin-top: 10px;
+            padding: 8px;
+            border: 1px dashed var(--accent-gold);
+            border-radius: 4px;
+        }
+        .rarity-legendary { color: #f9d71c; font-weight: 700; }
+        .rarity-epic { color: var(--accent-purple); font-weight: 700; }
+        .rarity-rare { color: #2196f3; }
 
-/* Grid responsive: use CSS variable --card-size set by JS */
-.grid{display:grid;grid-template-columns:repeat(var(--cols), var(--card-size));gap:var(--gap);justify-content:center;padding:8px;background:linear-gradient(180deg,#04121a,#071426);border-radius:8px}
-.card{width:var(--card-size);height:var(--card-size);perspective:700px;border-radius:6px;cursor:pointer;position:relative}
-.card-inner{width:100%;height:100%;position:relative;transition:transform .5s;transform-style:preserve-3d;border-radius:6px;box-shadow:0 6px 12px rgba(0,0,0,0.5)}
-.card.flipped .card-inner{transform:rotateY(180deg)}
-.face{position:absolute;inset:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:calc(var(--card-size) * 0.42);backface-visibility:hidden;user-select:none}
-.face.front{background:repeating-linear-gradient(45deg,#08131a,#08131a 6px,#0b1a24 6px);color:#bcd7ff}
-.face.back{background:linear-gradient(180deg,#2b163a,#151028);color:var(--accent2);transform:rotateY(180deg)}
+        /* Batalha/Idle */
+        .battle-log {
+            height: 150px;
+            overflow-y: scroll;
+            background: #151520;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        .battle-entry {
+            margin-bottom: 3px;
+        }
+        .combat-btn {
+            background: var(--accent-red);
+            margin-top: 10px;
+        }
+        .combat-btn:hover:not(:disabled) { background: #e57373; }
 
-/* controls (mobile friendly) */
-.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
-.input, select{padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:inherit;font-size:12px}
-.btn{background:var(--accent);color:#071018;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent)}
-
-/* Estilo do Chat e Ranking (Caixas) */
-.box{background:linear-gradient(180deg,#061018,#07101a);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:12px}
-.chat-window{height:300px;overflow:auto;padding:6px;border-radius:6px;background:linear-gradient(180deg,#041016,#051018)}
-.chat-row{margin-bottom:8px}
-.chat-name{color:var(--accent2);font-weight:700;margin-right:6px}
-.chat-time{color:var(--muted);font-size:10px;margin-left:8px}
-
-.leader-row{display:flex;justify-content:space-between;padding:8px;border-radius:6px;margin-bottom:6px;background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005))}
-
-/* small */
-.footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
-@media (max-width:520px){
-  :root{--cols:3}
-}
-/* Novo CSS para abas */
-.tab-header {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    /* Faz o header da aba ocupar a largura total do panel */
-    margin: -14px -14px 12px -14px; 
-    padding: 14px 14px 0 14px;
-    background: var(--panel);
-    border-radius: 10px 10px 0 0;
-}
-.tab-btn {
-    background: transparent;
-    color: var(--muted);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px 8px 0 0;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: color 0.2s;
-}
-.tab-btn.active {
-    color: var(--accent);
-    background: var(--bg);
-}
-.tab-panel:not(.active) {
-    display: none;
-}
-.auth-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-</style>
+        @media (min-width: 600px) {
+            .container {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
 <div class="container">
-  <div class="panel">
-
-    <div class="tab-header">
-        <button id="tabAppBtn" class="tab-btn">🕹️ Início</button>
-        <button id="tabChatBtn" class="tab-btn">💬 Chat</button>
-        <button id="tabRankBtn" class="tab-btn">🏆 Ranking</button>
-        <button id="tabAuthBtn" class="tab-btn">🔒 Cadastro/Login</button>
-    </div>
-
-    <div id="mainApp" class="tab-panel">
-        <div class="header">
-          <div>
-            <div class="title">PIXEL RPG MEMORY</div>
-            <div class="sub">Pixel-art moderno • Mobile-first</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
-          </div>
-        </div>
-
-        <div class="hud">
-          <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
-          <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
-          <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
-          <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
-        </div>
-
-        <div id="grid" class="grid"></div>
-
-        <div class="controls">
-                <div class="chip" style="background: transparent; border: none; font-size: 12px; color: var(--accent2);">
-              Jogador: <span id="playerNameDisplay">Anon</span>
-          </div>
-          <select id="skinSelect" class="input">
-            <option value="plain">Classic</option>
-            <option value="darker">Darker</option>
-            <option value="neon">Neon</option>
-          </select>
-          <button id="startBtn" class="btn">Start</button>
-          <button id="resetBtn" class="btn ghost">Reset</button>
-        </div>
-        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
-    </div>
-    
-    <div id="chatPanel" class="tab-panel">
-        <div class="box" style="margin-top: 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <strong style="color:var(--accent)">💬 Chat Global</strong>
-                <button id="clearChat" class="btn ghost" style="padding:6px">Limpar Local</button>
-            </div>
-            <div id="chatWindow" class="chat-window"></div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-                <span class="chip" id="chatNameDisplay" style="flex-shrink: 0; padding: 10px;">@Anon</span>
-                <input id="chatMsg" class="input" placeholder="Mensagem..." />
-                <button id="chatSend" class="btn">Enviar</button>
-            </div>
-            <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-        </div>
-    </div>
-
-    <div id="rankPanel" class="tab-panel">
-        <div class="box" style="margin-top: 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <strong style="color:var(--accent)">🏆 Ranking Global</strong>
-                <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
-            </div>
-            <div id="leaderboard"></div>
-            <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-        </div>
-    </div>
-    
-    <div id="authPanel" class="tab-panel">
-        <div class="auth-controls">
-            <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
-            <div id="authState" class="chip" style="color: var(--accent2);">Status: Desconectado</div>
-            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o nome que você salvará no Supabase.</p>
-            <input id="userEmail" class="input" placeholder="E-mail" />
-            <input id="userPassword" class="input" type="password" placeholder="Senha" />
-            
-            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para cadastro)" />
-
-            <div style="display:flex; gap: 8px;">
-                <button id="signInBtn" class="btn" style="flex:1">Login</button>
-                <button id="signUpBtn" class="btn ghost" style="flex:1">Cadastrar</button>
+    <div class="main-column">
+        <div class="panel">
+            <h2>🌍 IDLE HEROES: ASCENSION</h2>
+            <div class="hud">
+                <div class="resource">💰 Ouro: <span id="gold">0</span></div>
+                <div class="resource">✨ XP: <span id="xp">0</span></div>
+                <div class="resource">💠 Gemas: <span id="gems">100</span></div>
             </div>
-            <button id="signOutBtn" class="btn ghost" style="background: #a82e2e; color: white; display: none;">Sair (Logout)</button>
+            
+            <div class="panel">
+                <h2>⚔️ Campanha & Idle</h2>
+                <p>Seus heróis estão automaticamente em combate na Campanha.</p>
+                <div class="resource">Ganha por Tick: +<span id="goldPerTick">1</span> Ouro | +<span id="xpPerTick">1</span> XP</div>
+                <button id="startBattleBtn" class="combat-btn">INICIAR COMBATE MANUAL (10s)</button>
+                <div class="battle-log" id="battleLog"></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h2>🦸 Seus Heróis (<span id="heroCount">0</span>/10)</h2>
+            <div class="hero-list" id="heroList">
+                </div>
         </div>
     </div>
-  </div>
+
+    <div class="sidebar-column">
+        <div class="panel gacha-panel">
+            <h2>🔮 Recrutamento (Gacha)</h2>
+            <p>Recrute novos heróis por 100 Gemas.</p>
+            <button id="gachaBtn" class="btn gacha-btn">Recrutar (1x)</button>
+            <div id="gachaResult" class="gacha-result">Resultado da última invocação.</div>
+        </div>
+        
+        <div class="panel">
+            <h2>🛍️ Loja (Upgrades)</h2>
+            <p>Aumente a velocidade de produção de recursos (Custo: 50 Ouro).</p>
+            <button id="speedUpgradeBtn" class="btn">Upgrade de Velocidade</button>
+            <div id="shopNotice" style="margin-top: 10px; color: var(--text-muted);">Próximo upgrade: 50 Ouro.</div>
+        </div>
+    </div>
 </div>
-<script type="module">
-  // 1. Importa a biblioteca do Supabase
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  // 2. Variáveis de conexão - SUBSTITUÍDAS COM SEUS VALORES
-  const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
+<script>
+    // -----------------------------------------------------------------
+    //  1. CONFIGURAÇÕES E DADOS DO JOGO
+    // -----------------------------------------------------------------
 
-  // 3. Inicializa a conexão (Web Client)
-  const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
-  // ----------------------------------------------------
-  // CONFIGURAÇÕES E VARIÁVEIS
-  // ----------------------------------------------------
-  
-const API_CHAT = '/api/chat';
-const API_RANKING = '/api/ranking';
-const POLL_CHAT_MS = 2000;
-const POLL_RANK_MS = 4000;
-const EMOJIS = ['🍓','🍍','🍉','🍇','🥝','🍋','🥭','🍒'];
-const STORAGE_CHAT = 'prm_chat_v1';
-const STORAGE_RANK = 'prm_rank_v1';
-const STORAGE_BEST = 'prm_best_v1';
-
-/* ---------- DOM ---------- */
-const grid = document.getElementById('grid');
-const startBtn = document.getElementById('startBtn');
-const resetBtn = document.getElementById('resetBtn');
-
-// CORRIGIDO: Novos elementos para exibir o nome
-const playerNameDisplay = document.getElementById('playerNameDisplay');
-const chatNameDisplay = document.getElementById('chatNameDisplay'); 
-
-const playerHUD = document.getElementById('playerHUD');
-const timeHUD = document.getElementById('timeHUD');
-const triesHUD = document.getElementById('triesHUD');
-const bestHUD = document.getElementById('bestHUD');
-const apiStatus = document.getElementById('apiStatus');
-
-const chatWindow = document.getElementById('chatWindow');
-// REMOVIDO: const chatName = document.getElementById('chatName'); // Não é mais input
-const chatMsg = document.getElementById('chatMsg');
-const chatSend = document.getElementById('chatSend');
-const chatNotice = document.getElementById('chatNotice');
-
-const leaderboardEl = document.getElementById('leaderboard');
-const refreshRank = document.getElementById('refreshRank');
-const clearChatBtn = document.getElementById('clearChat');
-const rankNotice = document.getElementById('rankNotice');
-
-// Elementos de Auth e Abas
-const authStateEl = document.getElementById('authState');
-const tabAppBtn = document.getElementById('tabAppBtn');
-const tabChatBtn = document.getElementById('tabChatBtn'); 
-const tabRankBtn = document.getElementById('tabRankBtn'); 
-const tabAuthBtn = document.getElementById('tabAuthBtn');
-
-const mainAppPanel = document.getElementById('mainApp');
-const chatPanel = document.getElementById('chatPanel'); 
-const rankPanel = document.getElementById('rankPanel'); 
-const authPanel = document.getElementById('authPanel');
-
-const signOutBtn = document.getElementById('signOutBtn'); 
-const signUpBtn = document.getElementById('signUpBtn');
-const signInBtn = document.getElementById('signInBtn');
-const authPlayerNameInput = document.getElementById('authPlayerName'); 
-
-/* ---------- STATE ---------- */
-// VARIÁVEL GLOBAL PARA ARMAZENAR O NOME ATUAL
-let currentUserName = 'Anon'; 
-let cards = [], first=null, second=null, lock=false, matches=0, attempts=0;
-let timer=0, timerId=null, started=false;
-let bestLocal = localStorage.getItem(STORAGE_BEST) ? parseInt(localStorage.getItem(STORAGE_BEST)) : null;
-if(bestLocal) bestHUD.textContent = formatTime(bestLocal);
-
-/* ---------- RESPONSIVE CARD SIZE ---------- */
-function computeCardSize(){
-  // calculate columns based on viewport width
-  const containerWidth = Math.min(window.innerWidth - 40, 720); // keep some margin
-  const cols = window.innerWidth <= 520 ? 3 : 4;
-  document.documentElement.style.setProperty('--cols', cols);
-  const gap = 10;
-  const w = Math.floor((containerWidth - (cols-1)*gap - 16) / cols);
-  const size = Math.max(56, Math.min(w, 110));
-  document.documentElement.style.setProperty('--card-size', size + 'px');
-}
-window.addEventListener('resize', computeCardSize);
-computeCardSize();
-
-/* ---------- UTIL ---------- */
-function formatTime(s){const m=Math.floor(s/60); const sec=s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
-function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
-function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-
-/* ---------- ABAS (REVISADO) ---------- */
-function showTab(tabId) {
-    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-
-    document.getElementById(tabId).classList.add('active');
-    
-    const btnMap = {
-        'mainApp': 'tabAppBtn',
-        'chatPanel': 'tabChatBtn',
-        'rankPanel': 'tabRankBtn',
-        'authPanel': 'tabAuthBtn'
+    const RESOURCES = {
+        gold: 0,
+        xp: 0,
+        gems: 100
     };
-    if (btnMap[tabId]) {
-        document.getElementById(btnMap[tabId]).classList.add('active');
-    }
-}
 
-/* ---------- GRID, GAME LOGIC, RANKING e CHAT (MANTIDOS) ---------- */
-function createGrid(){
-  grid.innerHTML='';
-  const arr = shuffle([...EMOJIS, ...EMOJIS]);
-  cards = [];
-  arr.forEach((emoji,idx)=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.emoji = emoji;
-    card.innerHTML = `<div class="card-inner"><div class="face front">?</div><div class="face back">${emoji}</div></div>`;
-    card.addEventListener('click', onCardClick);
-    grid.appendChild(card);
-    cards.push(card);
-  });
-  resetHUD();
-}
-// CORREÇÃO: Usa a variável global currentUserName
-function resetHUD(){ 
-    attempts=0; 
-    matches=0; 
-    triesHUD.textContent='0'; 
-    stopTimer(); 
-    timer=0; 
-    timeHUD.textContent='00:00'; 
-    started=false; 
-    playerHUD.textContent = currentUserName || 'Anon'; 
-    // Atualiza o display do nome na área de controles do jogo
-    playerNameDisplay.textContent = currentUserName || 'Anon';
-}
+    const HERO_DATA = [
+        { name: "Aurora", rarity: "Epic", base_attack: 10, base_hp: 50 },
+        { name: "Kael", rarity: "Rare", base_attack: 5, base_hp: 40 },
+        { name: "Evelyn", rarity: "Rare", base_attack: 6, base_hp: 35 },
+        { name: "Zenith", rarity: "Legendary", base_attack: 15, base_hp: 70 },
+        { name: "Gideon", rarity: "Epic", base_attack: 8, base_hp: 60 }
+    ];
 
-function startTimer(){ if(timerId) return; timerId = setInterval(()=>{ timer++; timeHUD.textContent = formatTime(timer); }, 1000); }
-function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
-
-function onCardClick(e){
-  if(lock) return;
-  const c = e.currentTarget;
-  if(c.classList.contains('flipped')) return;
-  if(!started){ started=true; startTimer(); }
-  c.classList.add('flipped');
-  if(!first) first=c;
-  else { second=c; lock=true; attempts++; triesHUD.textContent=attempts; setTimeout(checkMatch, 500); }
-}
-function checkMatch(){
-  if(first.dataset.emoji === second.dataset.emoji){
-    matches++; first.classList.add('matched'); second.classList.add('matched');
-    [first,second]=[null,null]; lock=false;
-    if(matches === EMOJIS.length){ stopTimer(); handleWin(); }
-  } else {
-    first.classList.remove('flipped'); second.classList.remove('flipped');
-    [first,second]=[null,null]; lock=false;
-  }
-}
-
-// CORREÇÃO: Usa a variável global currentUserName
-async function handleWin(){
-  const name = (currentUserName || 'Anon').slice(0,30);
-  // save local best
-  if(!bestLocal || timer < bestLocal){ bestLocal = timer; localStorage.setItem(STORAGE_BEST, String(bestLocal)); bestHUD.textContent = formatTime(bestLocal); }
-  // attempt to send ranking
-  const payload = { name, time: timer };
-  let sent = false;
-  try{
-    const res = await fetch(API_RANKING, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    if(res.ok){ sent = true; rankNotice.textContent = 'Tempo enviado ao ranking global!'; }
-  }catch(e){ rankNotice.textContent = 'Ranking offline — salvo localmente'; }
-  if(!sent){
-    // fallback local store
-    const L = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-    L.push({ name, time: timer, at: Date.now() });
-    L.sort((a,b)=>a.time - b.time);
-    localStorage.setItem(STORAGE_RANK, JSON.stringify(L.slice(0,100)));
-  } else {
-    await loadRanking();
-  }
-  alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
-}
-
-/* ---------- AUTENTICAÇÃO ---------- */
-// CORREÇÃO: Atualiza a variável global
-async function fetchUserName(userId) {
-    const { data, error } = await supabaseWeb
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
+    const HERO_RARITY_CHANCES = {
+        Legendary: 0.05, // 5%
+        Epic: 0.25,      // 25%
+        Rare: 0.70       // 70%
+    };
     
-    let userName = 'Anon';
-    if (error && error.code !== 'PGRST116') { 
-        console.error('Erro ao buscar nome do usuário:', error.message);
-    }
-    
-    if (data && data.name) { 
-        userName = data.name;
-    } 
-    
-    currentUserName = userName; // ATUALIZA VARIÁVEL GLOBAL
-    playerHUD.textContent = userName;
-    playerNameDisplay.textContent = userName; // CORRIGIDO: Atualiza o display na aba Início
-    chatNameDisplay.textContent = `@${userName}`; // CORRIGIDO: Atualiza o display na aba Chat
-    authPlayerNameInput.value = userName; // Preenche o campo na aba de Auth
-}
+    // Nível de recursos ganhos por tick (aumentado por upgrades)
+    let idleRate = {
+        gold: 1,
+        xp: 1
+    };
 
-// CORREÇÃO: Atualiza a variável global
-function updateAuthUI(user) {
-    if (user) {
-        authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
-        signOutBtn.style.display = 'block';
-        signUpBtn.style.display = 'none';
-        signInBtn.style.display = 'none';
+    // Variáveis de Jogo
+    let heroes = [];
+    const MAX_HEROES = 10;
+    let tickIntervalId = null;
+    let upgradeCost = 50;
+
+    // -----------------------------------------------------------------
+    //  2. ELEMENTOS DO DOM
+    // -----------------------------------------------------------------
+
+    const $ = id => document.getElementById(id);
+
+    const DOM = {
+        gold: $('gold'),
+        xp: $('xp'),
+        gems: $('gems'),
+        goldPerTick: $('goldPerTick'),
+        xpPerTick: $('xpPerTick'),
+        heroList: $('heroList'),
+        heroCount: $('heroCount'),
+        gachaBtn: $('gachaBtn'),
+        gachaResult: $('gachaResult'),
+        startBattleBtn: $('startBattleBtn'),
+        battleLog: $('battleLog'),
+        speedUpgradeBtn: $('speedUpgradeBtn'),
+        shopNotice: $('shopNotice')
+    };
+
+    // -----------------------------------------------------------------
+    //  3. FUNÇÕES UTILITÁRIAS
+    // -----------------------------------------------------------------
+
+    /** Atualiza a exibição de todos os recursos na HUD. */
+    function updateResourcesUI() {
+        DOM.gold.textContent = RESOURCES.gold.toLocaleString();
+        DOM.xp.textContent = RESOURCES.xp.toLocaleString();
+        DOM.gems.textContent = RESOURCES.gems.toLocaleString();
+        DOM.goldPerTick.textContent = idleRate.gold;
+        DOM.xpPerTick.textContent = idleRate.xp;
         
-        fetchUserName(user.id); 
-
-    } else {
-        authStateEl.textContent = 'Status: Desconectado';
-        signOutBtn.style.display = 'none';
-        signUpBtn.style.display = 'inline-block';
-        signInBtn.style.display = 'inline-block';
-        
-        currentUserName = 'Anon'; // ATUALIZA VARIÁVEL GLOBAL
-        playerHUD.textContent = 'Anon';
-        playerNameDisplay.textContent = 'Anon'; // CORRIGIDO: Atualiza o display na aba Início
-        chatNameDisplay.textContent = `@Anon`; // CORRIGIDO: Atualiza o display na aba Chat
-        authPlayerNameInput.value = ''; // Limpa o campo de input na aba de Auth
-    }
-}
-
-// CORREÇÃO: Pega o nome do novo campo
-async function handleAuth(isSignUp) {
-    const emailEl = document.getElementById('userEmail');
-    const passwordEl = document.getElementById('userPassword');
-    const playerName = authPlayerNameInput.value.trim(); // PEGA O NOME DA ABA DE AUTH
-    
-    const email = emailEl.value.trim();
-    const password = passwordEl.value.trim();
-
-    if (!email || !password) {
-        alert('Por favor, preencha E-mail e Senha.');
-        return;
-    }
-    // Para cadastro, o nome não pode ser vazio
-    if (isSignUp && !playerName) {
-        alert('Por favor, defina um nome de usuário.');
-        return;
+        // Loja
+        DOM.shopNotice.textContent = `Próximo upgrade: ${upgradeCost} Ouro.`;
+        DOM.speedUpgradeBtn.disabled = RESOURCES.gold < upgradeCost;
     }
 
-    let authResult;
-
-    if (isSignUp) {
-        authResult = await supabaseWeb.auth.signUp({ email, password });
-    } else {
-        authResult = await supabaseWeb.auth.signInWithPassword({ email, password });
-    }
-
-    if (authResult.error) {
-        alert(`Erro de autenticação: ${authResult.error.message}`);
-        return;
-    }
-    
-    if (authResult.data.user) {
-        const userId = authResult.data.user.id;
-        // Salva o nome na tabela users
-        // Se for login, o nome já existe (ou será 'Anon' se não tiver no DB), 
-        // mas o upsert garante que, se o usuário alterar o campo de nome no login, ele será atualizado.
-        const { error: insertError } = await supabaseWeb
-            .from('users')
-            .upsert([{ id: userId, name: playerName || currentUserName }], { onConflict: 'id' }); 
-        
-        if (insertError) {
-             console.error('Erro ao salvar nome na tabela users:', insertError.message);
+    /** Loga uma mensagem na área de combate. */
+    function logBattle(message, color = var(--text-light)) {
+        const entry = document.createElement('div');
+        entry.className = 'battle-entry';
+        entry.style.color = color;
+        entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+        DOM.battleLog.prepend(entry); // Adiciona no topo
+        if (DOM.battleLog.children.length > 10) {
+            DOM.battleLog.removeChild(DOM.battleLog.lastChild); // Mantém no máximo 10
         }
     }
 
-    if (isSignUp) {
-        alert(`Sucesso! Verifique seu e-mail para confirmar o cadastro.`);
+    /** Calcula os stats de um herói dado seu nível. */
+    function calculateHeroStats(hero) {
+        const multiplier = 1 + (hero.level - 1) * 0.15; // 15% de aumento por nível
+        return {
+            attack: Math.round(hero.base_attack * multiplier),
+            hp: Math.round(hero.base_hp * multiplier)
+        };
     }
 
-    supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
-    loadChat(); 
-    showTab('mainApp'); 
-}
+    // -----------------------------------------------------------------
+    //  4. SISTEMA DE HERÓIS
+    // -----------------------------------------------------------------
 
-async function handleSignOut() {
-    const { error } = await supabaseWeb.auth.signOut();
-    if (error) {
-        alert(`Erro ao sair: ${error.message}`);
-        return;
+    /** Renderiza o cartão de um herói específico. */
+    function renderHeroCard(hero) {
+        const stats = calculateHeroStats(hero);
+        const nextLevelCost = hero.level * 100 + 50; // Custo progressivo
+
+        const card = document.createElement('div');
+        card.className = 'hero-card';
+        card.innerHTML = `
+            <div class="hero-info">
+                <div class="hero-name rarity-${hero.rarity.toLowerCase()}">${hero.name} <small>(Lvl ${hero.level})</small></div>
+                <div class="hero-stats">
+                    HP: ${stats.hp} | ATK: ${stats.attack}
+                </div>
+                <div class="hero-stats">
+                    Custo Próx. Nível: ${nextLevelCost} Ouro & ${nextLevelCost} XP
+                </div>
+            </div>
+            <div class="upgrade-controls">
+                <button class="btn upgrade-btn" data-hero-id="${hero.id}">Subir Nível</button>
+            </div>
+        `;
+        
+        const upgradeBtn = card.querySelector('.upgrade-btn');
+        upgradeBtn.disabled = RESOURCES.gold < nextLevelCost || RESOURCES.xp < nextLevelCost;
+        upgradeBtn.addEventListener('click', () => upgradeHero(hero.id, nextLevelCost));
+        
+        return card;
     }
-    alert('Desconectado com sucesso!');
-    updateAuthUI(null);
-    loadChat(); 
-}
 
-/* ---------- CHAT e RANKING (MANTIDOS, usando currentUserName) ---------- */
-async function loadChat(){
-  // try API
-  try{
-    const res = await fetch(API_CHAT);
-    if(res.ok){
-      const data = await res.json();
-      renderChat(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-  renderChat(local);
-}
-function renderChat(list){
-  chatWindow.innerHTML = '';
-  list.slice(-200).forEach(it=>{
-    const row = document.createElement('div'); row.className='chat-row';
-    const msgText = it.message || it.msg || ''; 
-    row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(msgText)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
-    chatWindow.appendChild(row);
-  });
-  chatWindow.scrollTop = chatWindow.scrollHeight;
-}
+    /** Renderiza a lista completa de heróis. */
+    function renderHeroList() {
+        DOM.heroList.innerHTML = '';
+        heroes.forEach(hero => {
+            DOM.heroList.appendChild(renderHeroCard(hero));
+        });
+        DOM.heroCount.textContent = `${heroes.length}/${MAX_HEROES}`;
+        DOM.gachaBtn.disabled = heroes.length >= MAX_HEROES || RESOURCES.gems < 100;
+        updateResourcesUI(); // Garante que a UI de recursos está sincronizada
+    }
 
-// CORREÇÃO: Usa a variável global currentUserName
-async function sendChat() { 
-  // Pega o nome da variável global (não de um input)
-  const name = (currentUserName || 'Anon').slice(0, 30);
-  const msg = (chatMsg.value || '').trim();
+    /** Tenta subir o nível de um herói. */
+    function upgradeHero(id, cost) {
+        const hero = heroes.find(h => h.id === id);
+        if (!hero) return;
 
-  if (!msg) return;
+        if (RESOURCES.gold >= cost && RESOURCES.xp >= cost) {
+            RESOURCES.gold -= cost;
+            RESOURCES.xp -= cost;
+            hero.level++;
+            logBattle(`${hero.name} subiu para o Nível ${hero.level}! ✨`, 'var(--accent-purple)');
+            renderHeroList();
+            saveGame();
+        } else {
+            alert('Recursos insuficientes para subir o nível!');
+        }
+    }
 
-  const { data: { session }, error: sessionError } = await supabaseWeb.auth.getSession();
+    // -----------------------------------------------------------------
+    //  5. SISTEMA DE RECRUTAMENTO (GACHA)
+    // -----------------------------------------------------------------
 
-  if (sessionError || !session || !session.user) {
-    chatNotice.textContent = 'ERRO: Você deve estar logado para enviar mensagens!';
-    return;
-  }
-  const currentUserId = session.user.id;
-  const accessToken = session.access_token; 
+    /** Executa a invocação Gacha. */
+    function performGacha() {
+        if (RESOURCES.gems < 100) {
+            DOM.gachaResult.textContent = '❌ Gemas insuficientes! Custa 100 Gemas.';
+            return;
+        }
+        if (heroes.length >= MAX_HEROES) {
+            DOM.gachaResult.textContent = '❌ Limite de heróis atingido! Desmonte alguns.';
+            return;
+        }
 
-  const payload = { 
-    name, 
-    message: msg, 
-    user_id: currentUserId 
-  };
-  
-  try {
-    const res = await fetch(API_CHAT, { 
-      method: 'POST', 
-      headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}` 
-        }, 
-      body: JSON.stringify(payload) 
-    });
+        RESOURCES.gems -= 100;
 
-    if (res.ok) {
-      chatMsg.value = '';
-      chatNotice.textContent = 'Mensagem enviada';
-      loadChat(); 
-      return; 
-    }
-    chatNotice.textContent = `Erro ao enviar chat: ${res.statusText}`;
+        const rand = Math.random();
+        let selectedRarity = 'Rare';
+        let cumulativeChance = 0;
 
-  } catch(e) {
-    const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-    local.push({ name, msg, at: Date.now() });
-    localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
-    chatMsg.value = '';
-    chatNotice.textContent = 'Chat offline - mensagem salva localmente';
-    loadChat();
-  }
-}
+        // Determina a raridade
+        for (const rarity in HERO_RARITY_CHANCES) {
+            cumulativeChance += HERO_RARITY_CHANCES[rarity];
+            if (rand < cumulativeChance) {
+                selectedRarity = rarity;
+                break;
+            }
+        }
 
+        const availableHeroes = HERO_DATA.filter(h => h.rarity === selectedRarity);
+        if (availableHeroes.length === 0) return; // Segurança
 
-async function loadRanking(){
-  try{
-    const res = await fetch(API_RANKING);
-    if(res.ok){
-      const data = await res.json();
-      renderRanking(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-  renderRanking(local);
-}
-function renderRanking(list){
-  leaderboardEl.innerHTML = '';
-  if(!list || list.length===0){ leaderboardEl.innerHTML = '<div style="color:var(--muted)">Nenhum score registrado.</div>'; return; }
-  list.slice(0,20).forEach((it, idx)=>{
-    const row = document.createElement('div'); row.className='leader-row';
-    row.innerHTML = `<div>${idx+1}. ${escapeHtml(it.name)}</div><div style="font-weight:900;color:var(--accent)">${formatTime(Math.round(it.time))}</div>`;
-    leaderboardEl.appendChild(row);
-  });
-}
+        const newHeroData = availableHeroes[Math.floor(Math.random() * availableHeroes.length)];
 
+        // Cria o novo herói
+        const newHero = {
+            id: Date.now() + Math.random(), // ID único
+            ...newHeroData,
+            level: 1,
+        };
 
-/* ---------- EVENTS ---------- */
-startBtn.addEventListener('click', ()=>{ createGrid(); computeCardSize(); });
-resetBtn.addEventListener('click', ()=>{ createGrid(); localStorage.removeItem(STORAGE_RANK); rankNotice.textContent='Ranking local limpo'; });
-chatSend.addEventListener('click', ()=>{ sendChat(); });
-chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
-refreshRank.addEventListener('click', ()=>loadRanking());
-clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
+        heroes.push(newHero);
+        
+        // Atualiza a UI
+        DOM.gachaResult.innerHTML = `🎉 Você recrutou: <span class="rarity-${selectedRarity.toLowerCase()}">${newHero.name} (${selectedRarity})</span>!`;
+        logBattle(`Novo Herói Recrutado: ${newHero.name} (${selectedRarity})`, 'var(--accent-gold)');
+        renderHeroList();
+        saveGame();
+    }
+    
+    // -----------------------------------------------------------------
+    //  6. SISTEMA IDLE E COMBATE
+    // -----------------------------------------------------------------
+    
+    /** Função principal de tick (a cada segundo). */
+    function idleTick() {
+        RESOURCES.gold += idleRate.gold;
+        RESOURCES.xp += idleRate.xp;
+        updateResourcesUI();
+    }
+    
+    /** Simula um combate manual (duração de 10 segundos). */
+    function startManualCombat() {
+        if (heroes.length === 0) {
+            logBattle('❌ Recrute um herói primeiro!', 'var(--accent-red)');
+            return;
+        }
 
-// Conecta os novos botões de Abas e Autenticação
-signUpBtn.addEventListener('click', () => handleAuth(true)); 
-signInBtn.addEventListener('click', () => handleAuth(false));
-signOutBtn.addEventListener('click', handleSignOut);
+        DOM.startBattleBtn.disabled = true;
+        DOM.startBattleBtn.textContent = 'Em Combate...';
+        logBattle('Iniciando Combate Manual! 💥', 'var(--accent-red)');
+        
+        let combatTimer = 10;
+        const totalHeroAttack = heroes.reduce((sum, h) => sum + calculateHeroStats(h).attack, 0);
+        const enemyHP = 500 * (heroes.length + 1); // Inimigo fica mais forte
 
-tabAppBtn.addEventListener('click', () => showTab('mainApp'));
-tabChatBtn.addEventListener('click', () => showTab('chatPanel')); 
-tabRankBtn.addEventListener('click', () => showTab('rankPanel')); 
-tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
+        const combatInterval = setInterval(() => {
+            combatTimer--;
+            logBattle(`Inimigo sofreu ${totalHeroAttack} de dano! Restante: ${enemyHP - (10 - combatTimer) * totalHeroAttack}`, 'var(--text-muted)');
+            
+            if (combatTimer <= 0) {
+                clearInterval(combatInterval);
+                const goldReward = Math.round(enemyHP / 10 + Math.random() * 50);
+                const xpReward = Math.round(enemyHP / 20 + Math.random() * 50);
+                
+                RESOURCES.gold += goldReward;
+                RESOURCES.xp += xpReward;
+                logBattle(`✅ VITÓRIA! Recompensa: ${goldReward} Ouro, ${xpReward} XP!`, 'var(--accent-gold)');
 
+                DOM.startBattleBtn.disabled = false;
+                DOM.startBattleBtn.textContent = 'INICIAR COMBATE MANUAL (10s)';
+                saveGame();
+            }
+        }, 1000);
+    }
+    
+    /** Tenta fazer o upgrade de velocidade global. */
+    function upgradeIdleSpeed() {
+        if (RESOURCES.gold >= upgradeCost) {
+            RESOURCES.gold -= upgradeCost;
+            idleRate.gold += 1; // Aumenta 1 por tick
+            idleRate.xp += 1;
+            upgradeCost = Math.round(upgradeCost * 1.5); // Aumenta o custo
+            logBattle(`Upgrade de Velocidade! Ganho por tick: +${idleRate.gold}`, 'var(--accent-gold)');
+            updateResourcesUI();
+            saveGame();
+        }
+    }
 
-/* ---------- INIT ---------- */
-createGrid(); 
-loadChat(); 
-loadRanking();
-setInterval(loadChat, POLL_CHAT_MS);
-setInterval(loadRanking, POLL_RANK_MS);
+    // -----------------------------------------------------------------
+    //  7. SALVAR/CARREGAR JOGO
+    // -----------------------------------------------------------------
 
-// Inicializa a aba principal
-showTab('mainApp'); 
+    function saveGame() {
+        const gameState = {
+            resources: RESOURCES,
+            heroes: heroes,
+            idleRate: idleRate,
+            upgradeCost: upgradeCost
+        };
+        localStorage.setItem('idleHeroesSave', JSON.stringify(gameState));
+    }
 
-// Inicializa a UI de autenticação
-supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
+    function loadGame() {
+        const savedGame = localStorage.getItem('idleHeroesSave');
+        if (savedGame) {
+            const gameState = JSON.parse(savedGame);
+            Object.assign(RESOURCES, gameState.resources);
+            heroes = gameState.heroes;
+            idleRate = gameState.idleRate;
+            upgradeCost = gameState.upgradeCost;
+            logBattle('Jogo carregado com sucesso!');
+        } else {
+            logBattle('Novo jogo iniciado!');
+        }
+    }
 
+    // -----------------------------------------------------------------
+    //  8. INICIALIZAÇÃO
+    // -----------------------------------------------------------------
+
+    function init() {
+        // 1. Carregar jogo e iniciar tick
+        loadGame();
+        tickIntervalId = setInterval(idleTick, 1000); // Roda a cada 1 segundo
+
+        // 2. Renderizar UI inicial
+        renderHeroList();
+        updateResourcesUI();
+        
+        // 3. Conectar Eventos
+        DOM.gachaBtn.addEventListener('click', performGacha);
+        DOM.startBattleBtn.addEventListener('click', startManualCombat);
+        DOM.speedUpgradeBtn.addEventListener('click', upgradeIdleSpeed);
+        
+        // 4. Salvar periodicamente
+        setInterval(saveGame, 5000); // Salva a cada 5 segundos
+    }
+
+    init();
 </script>
 </body>
 </html>
