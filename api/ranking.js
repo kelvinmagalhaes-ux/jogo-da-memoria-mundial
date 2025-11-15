@@ -1,7 +1,7 @@
 // ranking.js (Nova Versão com Supabase)
 
 // Altere o caminho se o seu arquivo supabaseClient.js estiver em outro lugar
-import { supabase } from '../lib/supabaseClient'; 
+import { supabase } from '../supabaseClient';
 
 export default async function handler(req, res) { 
   try {
