@@ -26,12 +26,28 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 
 /* Grid responsive: use CSS variable --card-size set by JS */
 .grid{display:grid;grid-template-columns:repeat(var(--cols), var(--card-size));gap:var(--gap);justify-content:center;padding:8px;background:linear-gradient(180deg,#04121a,#071426);border-radius:8px}
+
+/* NOVO: Estilos para 5 e 6 colunas (Desktop) */
+@media (min-width: 521px) {
+    .grid[data-cols="5"] { grid-template-columns: repeat(5, var(--card-size)); }
+    .grid[data-cols="6"] { grid-template-columns: repeat(6, var(--card-size)); }
+}
+
 .card{width:var(--card-size);height:var(--card-size);perspective:700px;border-radius:6px;cursor:pointer;position:relative}
 .card-inner{width:100%;height:100%;position:relative;transition:transform .5s;transform-style:preserve-3d;border-radius:6px;box-shadow:0 6px 12px rgba(0,0,0,0.5)}
 .card.flipped .card-inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:calc(var(--card-size) * 0.42);backface-visibility:hidden;user-select:none}
 .face.front{background:repeating-linear-gradient(45deg,#08131a,#08131a 6px,#0b1a24 6px);color:#bcd7ff}
 .face.back{background:linear-gradient(180deg,#2b163a,#151028);color:var(--accent2);transform:rotateY(180deg)}
+
+/* NOVO: Estilo para cartas que devem sumir após o match */
+.card.matched-out {
+    opacity: 0;
+    transform: scale(0.8); /* Efeito de encolher */
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out; /* Transição mais suave */
+    pointer-events: none; /* Impede cliques em cartas que estão sumindo */
+}
+
 
 /* controls (mobile friendly) */
 .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
@@ -52,40 +68,45 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 .footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
 @media (max-width:520px){
   :root{--cols:3}
+  /* NOVO: Ajusta o seletor de dificuldade no mobile */
+  .controls select {
+    flex: 1 1 auto;
+    min-width: unset;
+  }
 }
 /* Novo CSS para abas */
 .tab-header {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 12px;
-    /* Faz o header da aba ocupar a largura total do panel */
-    margin: -14px -14px 12px -14px; 
-    padding: 14px 14px 0 14px;
-    background: var(--panel);
-    border-radius: 10px 10px 0 0;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    /* Faz o header da aba ocupar a largura total do panel */
+    margin: -14px -14px 12px -14px; 
+    padding: 14px 14px 0 14px;
+    background: var(--panel);
+    border-radius: 10px 10px 0 0;
 }
 .tab-btn {
-    background: transparent;
-    color: var(--muted);
-    border: none;
-    padding: 8px 12px;
-    border-radius: 8px 8px 0 0;
-    font-size: 11px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: color 0.2s;
+    background: transparent;
+    color: var(--muted);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px 8px 0 0;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: color 0.2s;
 }
 .tab-btn.active {
-    color: var(--accent);
-    background: var(--bg);
+    color: var(--accent);
+    background: var(--bg);
 }
 .tab-panel:not(.active) {
-    display: none;
+    display: none;
 }
 .auth-controls {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 </style>
 </head>
@@ -93,92 +114,97 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 <div class="container">
   <div class="panel">
 
-    <div class="tab-header">
-        <button id="tabAppBtn" class="tab-btn">🕹️ Início</button>
-        <button id="tabChatBtn" class="tab-btn">💬 Chat</button>
-        <button id="tabRankBtn" class="tab-btn">🏆 Ranking</button>
-        <button id="tabAuthBtn" class="tab-btn">🔒 Cadastro/Login</button>
-    </div>
+    <div class="tab-header">
+        <button id="tabAppBtn" class="tab-btn">🕹️ Início</button>
+        <button id="tabChatBtn" class="tab-btn">💬 Chat</button>
+        <button id="tabRankBtn" class="tab-btn">🏆 Ranking</button>
+        <button id="tabAuthBtn" class="tab-btn">🔒 Cadastro/Login</button>
+    </div>
 
-    <div id="mainApp" class="tab-panel">
-        <div class="header">
-          <div>
-            <div class="title">PIXEL RPG MEMORY</div>
-            <div class="sub">Pixel-art moderno • Mobile-first</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
-          </div>
-        </div>
+    <div id="mainApp" class="tab-panel">
+        <div class="header">
+          <div>
+            <div class="title">PIXEL RPG MEMORY</div>
+            <div class="sub">Pixel-art moderno • Mobile-first</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
+          </div>
+        </div>
 
-        <div class="hud">
-          <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
-          <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
-          <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
-          <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
-        </div>
+        <div class="hud">
+          <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
+          <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
+          <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
+          <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
+        </div>
 
-        <div id="grid" class="grid"></div>
+        <div id="grid" class="grid"></div>
 
-        <div class="controls">
-                <div class="chip" style="background: transparent; border: none; font-size: 12px; color: var(--accent2);">
-              Jogador: <span id="playerNameDisplay">Anon</span>
-          </div>
-          <select id="skinSelect" class="input">
-            <option value="plain">Classic</option>
-            <option value="darker">Darker</option>
-            <option value="neon">Neon</option>
-          </select>
-          <button id="startBtn" class="btn">Start</button>
-          <button id="resetBtn" class="btn ghost">Reset</button>
-        </div>
-        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
-    </div>
-    
-    <div id="chatPanel" class="tab-panel">
-        <div class="box" style="margin-top: 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <strong style="color:var(--accent)">💬 Chat Global</strong>
-                <button id="clearChat" class="btn ghost" style="padding:6px">Limpar Local</button>
-            </div>
-            <div id="chatWindow" class="chat-window"></div>
-            <div style="display:flex;gap:8px;margin-top:8px">
-                <span class="chip" id="chatNameDisplay" style="flex-shrink: 0; padding: 10px;">@Anon</span>
-                <input id="chatMsg" class="input" placeholder="Mensagem..." />
-                <button id="chatSend" class="btn">Enviar</button>
-            </div>
-            <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-        </div>
-    </div>
+        <div class="controls">
+                <div class="chip" style="background: transparent; border: none; font-size: 12px; color: var(--accent2);">
+              Jogador: <span id="playerNameDisplay">Anon</span>
+          </div>
+          <select id="difficultySelect" class="input">
+              <option value="4x4">Fácil (4x4)</option>
+              <option value="5x4">Médio (5x4)</option>
+              <option value="6x4">Difícil (6x4)</option>
+          </select>
+          <select id="skinSelect" class="input">
+            <option value="plain">Classic</option>
+            <option value="darker">Darker</option>
+            <option value="neon">Neon</option>
+          </select>
+          <button id="startBtn" class="btn">Start</button>
+          <button id="resetBtn" class="btn ghost">Reset</button>
+        </div>
+        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
+    </div>
+    
+    <div id="chatPanel" class="tab-panel">
+        <div class="box" style="margin-top: 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <strong style="color:var(--accent)">💬 Chat Global</strong>
+                <button id="clearChat" class="btn ghost" style="padding:6px">Limpar Local</button>
+            </div>
+            <div id="chatWindow" class="chat-window"></div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <span class="chip" id="chatNameDisplay" style="flex-shrink: 0; padding: 10px;">@Anon</span>
+                <input id="chatMsg" class="input" placeholder="Mensagem..." />
+                <button id="chatSend" class="btn">Enviar</button>
+            </div>
+            <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
+        </div>
+    </div>
 
-    <div id="rankPanel" class="tab-panel">
-        <div class="box" style="margin-top: 0;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                <strong style="color:var(--accent)">🏆 Ranking Global</strong>
-                <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
-            </div>
-            <div id="leaderboard"></div>
-            <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-        </div>
-    </div>
-    
-    <div id="authPanel" class="tab-panel">
-        <div class="auth-controls">
-            <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
-            <div id="authState" class="chip" style="color: var(--accent2);">Status: Desconectado</div>
-            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o nome que você salvará no Supabase.</p>
-            <input id="userEmail" class="input" placeholder="E-mail" />
-            <input id="userPassword" class="input" type="password" placeholder="Senha" />
-            
-            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para cadastro)" />
+    <div id="rankPanel" class="tab-panel">
+        <div class="box" style="margin-top: 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <strong style="color:var(--accent)">🏆 Ranking Global</strong>
+                <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
+            </div>
+            <div id="leaderboard"></div>
+            <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
+        </div>
+    </div>
+    
+    <div id="authPanel" class="tab-panel">
+        <div class="auth-controls">
+            <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
+            <div id="authState" class="chip" style="color: var(--accent2);">Status: Desconectado</div>
+            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o nome que você salvará no Supabase.</p>
+            <input id="userEmail" class="input" placeholder="E-mail" />
+            <input id="userPassword" class="input" type="password" placeholder="Senha" />
+            
+            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para cadastro)" />
 
-            <div style="display:flex; gap: 8px;">
-                <button id="signInBtn" class="btn" style="flex:1">Login</button>
-                <button id="signUpBtn" class="btn ghost" style="flex:1">Cadastrar</button>
-            </div>
-            <button id="signOutBtn" class="btn ghost" style="background: #a82e2e; color: white; display: none;">Sair (Logout)</button>
-        </div>
-    </div>
+            <div style="display:flex; gap: 8px;">
+                <button id="signInBtn" class="btn" style="flex:1">Login</button>
+                <button id="signUpBtn" class="btn ghost" style="flex:1">Cadastrar</button>
+            </div>
+            <button id="signOutBtn" class="btn ghost" style="background: #a82e2e; color: white; display: none;">Sair (Logout)</button>
+        </div>
+    </div>
   </div>
 </div>
 <script type="module">
@@ -187,7 +213,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 
   // 2. Variáveis de conexão - SUBSTITUÍDAS COM SEUS VALORES
   const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdzRswo'; 
 
   // 3. Inicializa a conexão (Web Client)
   const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -200,19 +226,20 @@ const API_CHAT = '/api/chat';
 const API_RANKING = '/api/ranking';
 const POLL_CHAT_MS = 2000;
 const POLL_RANK_MS = 4000;
-const EMOJIS = ['🍓','🍍','🍉','🍇','🥝','🍋','🥭','🍒'];
+// AUMENTADO O NÚMERO DE EMOJIS PARA SUPORTAR DIFICULDADES MAIORES
+const ALL_EMOJIS = ['🍓','🍍','🍉','🍇','🥝','🍋','🥭','🍒', '🍑', '🥥', '🍌', '🍎'];
 const STORAGE_CHAT = 'prm_chat_v1';
 const STORAGE_RANK = 'prm_rank_v1';
 const STORAGE_BEST = 'prm_best_v1';
+const STORAGE_DIFF = 'prm_diff_v1'; // Armazenar a dificuldade
 
 /* ---------- DOM ---------- */
 const grid = document.getElementById('grid');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
 
-// CORRIGIDO: Novos elementos para exibir o nome
 const playerNameDisplay = document.getElementById('playerNameDisplay');
-const chatNameDisplay = document.getElementById('chatNameDisplay'); 
+const chatNameDisplay = document.getElementById('chatNameDisplay'); 
 
 const playerHUD = document.getElementById('playerHUD');
 const timeHUD = document.getElementById('timeHUD');
@@ -221,7 +248,6 @@ const bestHUD = document.getElementById('bestHUD');
 const apiStatus = document.getElementById('apiStatus');
 
 const chatWindow = document.getElementById('chatWindow');
-// REMOVIDO: const chatName = document.getElementById('chatName'); // Não é mais input
 const chatMsg = document.getElementById('chatMsg');
 const chatSend = document.getElementById('chatSend');
 const chatNotice = document.getElementById('chatNotice');
@@ -234,70 +260,96 @@ const rankNotice = document.getElementById('rankNotice');
 // Elementos de Auth e Abas
 const authStateEl = document.getElementById('authState');
 const tabAppBtn = document.getElementById('tabAppBtn');
-const tabChatBtn = document.getElementById('tabChatBtn'); 
-const tabRankBtn = document.getElementById('tabRankBtn'); 
+const tabChatBtn = document.getElementById('tabChatBtn'); 
+const tabRankBtn = document.getElementById('tabRankBtn'); 
 const tabAuthBtn = document.getElementById('tabAuthBtn');
 
-const mainAppPanel = document.getElementById('mainApp');
-const chatPanel = document.getElementById('chatPanel'); 
-const rankPanel = document.getElementById('rankPanel'); 
-const authPanel = document.getElementById('authPanel');
-
-const signOutBtn = document.getElementById('signOutBtn'); 
+const signOutBtn = document.getElementById('signOutBtn'); 
 const signUpBtn = document.getElementById('signUpBtn');
 const signInBtn = document.getElementById('signInBtn');
-const authPlayerNameInput = document.getElementById('authPlayerName'); 
+const authPlayerNameInput = document.getElementById('authPlayerName'); 
+const difficultySelect = document.getElementById('difficultySelect'); // Seletor de dificuldade
 
 /* ---------- STATE ---------- */
-// VARIÁVEL GLOBAL PARA ARMAZENAR O NOME ATUAL
-let currentUserName = 'Anon'; 
+let currentUserName = localStorage.getItem('currentUserName') || 'Anon'; 
 let cards = [], first=null, second=null, lock=false, matches=0, attempts=0;
 let timer=0, timerId=null, started=false;
+let currentDifficulty = localStorage.getItem(STORAGE_DIFF) || '4x4'; // Pega a dificuldade salva
 let bestLocal = localStorage.getItem(STORAGE_BEST) ? parseInt(localStorage.getItem(STORAGE_BEST)) : null;
 if(bestLocal) bestHUD.textContent = formatTime(bestLocal);
 
-/* ---------- RESPONSIVE CARD SIZE ---------- */
+/* ---------- RESPONSIVE CARD SIZE (AJUSTADO PARA DIFICULDADE) ---------- */
 function computeCardSize(){
-  // calculate columns based on viewport width
-  const containerWidth = Math.min(window.innerWidth - 40, 720); // keep some margin
-  const cols = window.innerWidth <= 520 ? 3 : 4;
-  document.documentElement.style.setProperty('--cols', cols);
-  const gap = 10;
-  const w = Math.floor((containerWidth - (cols-1)*gap - 16) / cols);
+  // Pega a dificuldade atual
+  const [colsStr, rowsStr] = currentDifficulty.split('x');
+  // Se a dificuldade for inválida ou não suportada, volta para 4
+  const cols = parseInt(colsStr) || 4; 
+  
+  // NOVO: Atualiza a variável CSS e o atributo data-cols na grid
+  document.documentElement.style.setProperty('--cols', cols);
+  grid.setAttribute('data-cols', cols);
+
+  // Usa a largura do container/viewport
+  const containerWidth = Math.min(window.innerWidth - (window.innerWidth <= 520 ? 12 : 40), 720);
+  // Ajusta espaçamento
+  const gap = window.innerWidth <= 520 ? 6 : 10;
+  document.documentElement.style.setProperty('--gap', gap + 'px');
+  // Calcula o tamanho da carta
+  const w = Math.floor((containerWidth - (cols-1)*gap - (window.innerWidth <= 520 ? 20 : 16)) / cols);
   const size = Math.max(56, Math.min(w, 110));
   document.documentElement.style.setProperty('--card-size', size + 'px');
 }
 window.addEventListener('resize', computeCardSize);
-computeCardSize();
 
-/* ---------- UTIL ---------- */
+
+/* ---------- UTIL (MANTIDO) ---------- */
 function formatTime(s){const m=Math.floor(s/60); const sec=s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-/* ---------- ABAS (REVISADO) ---------- */
+/* ---------- ABAS (MANTIDO) ---------- */
 function showTab(tabId) {
-    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    // Limpa a classe 'active' de todos os painéis e botões
+    document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
-    document.getElementById(tabId).classList.add('active');
-    
-    const btnMap = {
-        'mainApp': 'tabAppBtn',
-        'chatPanel': 'tabChatBtn',
-        'rankPanel': 'tabRankBtn',
-        'authPanel': 'tabAuthBtn'
-    };
-    if (btnMap[tabId]) {
-        document.getElementById(btnMap[tabId]).classList.add('active');
-    }
+    // Adiciona 'active' ao painel correspondente
+    const panel = document.getElementById(tabId);
+    if(panel) panel.classList.add('active');
+    
+    // Adiciona 'active' ao botão correspondente
+    const btnMap = {
+        'mainApp': 'tabAppBtn',
+        'chatPanel': 'tabChatBtn',
+        'rankPanel': 'tabRankBtn',
+        'authPanel': 'tabAuthBtn'
+    };
+    const btn = document.getElementById(btnMap[tabId]);
+    if (btn) btn.classList.add('active');
 }
 
-/* ---------- GRID, GAME LOGIC, RANKING e CHAT (MANTIDOS) ---------- */
+/* ---------- GRID, GAME LOGIC (AJUSTADO) ---------- */
 function createGrid(){
   grid.innerHTML='';
-  const arr = shuffle([...EMOJIS, ...EMOJIS]);
+  
+  // Determina quantos pares de cartas são necessários
+  const [colsStr, rowsStr] = currentDifficulty.split('x');
+  const totalCards = (parseInt(colsStr) || 4) * (parseInt(rowsStr) || 4);
+  const totalPairs = totalCards / 2;
+  
+  // Seleciona o número necessário de emojis
+  const selectedEmojis = ALL_EMOJIS.slice(0, totalPairs);
+  
+  // Se não houver emojis suficientes, alerta
+  if (selectedEmojis.length < totalPairs) {
+      alert(`Erro: A dificuldade ${currentDifficulty} requer ${totalPairs} pares, mas só há ${ALL_EMOJIS.length} disponíveis.`);
+      return;
+  }
+  
+  // Cria o array de cartas e embaralha
+  const arr = shuffle([...selectedEmojis, ...selectedEmojis]);
   cards = [];
+
   arr.forEach((emoji,idx)=>{
     const card = document.createElement('div');
     card.className = 'card';
@@ -307,20 +359,19 @@ function createGrid(){
     grid.appendChild(card);
     cards.push(card);
   });
+  
+  matches = 0; // Zera o contador de matches global
   resetHUD();
 }
-// CORREÇÃO: Usa a variável global currentUserName
-function resetHUD(){ 
-    attempts=0; 
-    matches=0; 
-    triesHUD.textContent='0'; 
-    stopTimer(); 
-    timer=0; 
-    timeHUD.textContent='00:00'; 
-    started=false; 
-    playerHUD.textContent = currentUserName || 'Anon'; 
-    // Atualiza o display do nome na área de controles do jogo
-    playerNameDisplay.textContent = currentUserName || 'Anon';
+function resetHUD(){ 
+    attempts=0; 
+    triesHUD.textContent='0'; 
+    stopTimer(); 
+    timer=0; 
+    timeHUD.textContent='00:00'; 
+    started=false; 
+    playerHUD.textContent = currentUserName || 'Anon'; 
+    playerNameDisplay.textContent = currentUserName || 'Anon';
 }
 
 function startTimer(){ if(timerId) return; timerId = setInterval(()=>{ timer++; timeHUD.textContent = formatTime(timer); }, 1000); }
@@ -335,157 +386,184 @@ function onCardClick(e){
   if(!first) first=c;
   else { second=c; lock=true; attempts++; triesHUD.textContent=attempts; setTimeout(checkMatch, 500); }
 }
+
+// NOVO: Função checkMatch com Animação de Desaparecimento
 function checkMatch(){
   if(first.dataset.emoji === second.dataset.emoji){
-    matches++; first.classList.add('matched'); second.classList.add('matched');
-    [first,second]=[null,null]; lock=false;
-    if(matches === EMOJIS.length){ stopTimer(); handleWin(); }
+    matches++; 
+    
+    // 1. Aplica a classe para iniciar o efeito visual
+    first.classList.add('matched-out'); 
+    second.classList.add('matched-out');
+    
+    // 2. Adiciona um efeito sonoro ou vibração aqui (opcional)
+
+    // 3. Remove as cartas do DOM e continua a lógica
+    setTimeout(() => {
+        // Verifica se as cartas ainda existem antes de tentar remover
+        if (first && first.parentNode) first.remove();
+        if (second && second.parentNode) second.remove();
+        
+        // Zera as variáveis de controle do clique
+        [first,second]=[null,null]; 
+        lock=false;
+        
+        // Pega o número total de pares da dificuldade atual
+        const [colsStr, rowsStr] = currentDifficulty.split('x');
+        const totalPairs = ((parseInt(colsStr) || 4) * (parseInt(rowsStr) || 4)) / 2;
+        
+        // Verifica a vitória
+        if(matches === totalPairs){ 
+            stopTimer(); 
+            handleWin(); 
+        }
+    }, 350); // Tempo da animação no CSS
+
   } else {
-    first.classList.remove('flipped'); second.classList.remove('flipped');
-    [first,second]=[null,null]; lock=false;
+    first.classList.remove('flipped'); 
+    second.classList.remove('flipped');
+    [first,second]=[null,null]; 
+    lock=false;
   }
 }
 
-// CORREÇÃO: Usa a variável global currentUserName
+
 async function handleWin(){
   const name = (currentUserName || 'Anon').slice(0,30);
   // save local best
   if(!bestLocal || timer < bestLocal){ bestLocal = timer; localStorage.setItem(STORAGE_BEST, String(bestLocal)); bestHUD.textContent = formatTime(bestLocal); }
   // attempt to send ranking
-  const payload = { name, time: timer };
+  // Adicionar a dificuldade ao payload aqui é crucial para rankings segmentados
+  const payload = { name, time: timer, difficulty: currentDifficulty }; 
   let sent = false;
   try{
+    // OBS: A sua API /api/ranking precisa ser atualizada para receber 'difficulty'
     const res = await fetch(API_RANKING, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
     if(res.ok){ sent = true; rankNotice.textContent = 'Tempo enviado ao ranking global!'; }
   }catch(e){ rankNotice.textContent = 'Ranking offline — salvo localmente'; }
   if(!sent){
     // fallback local store
     const L = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-    L.push({ name, time: timer, at: Date.now() });
+    // Adiciona o campo de dificuldade ao salvar localmente
+    L.push({ name, time: timer, at: Date.now(), difficulty: currentDifficulty }); 
     L.sort((a,b)=>a.time - b.time);
     localStorage.setItem(STORAGE_RANK, JSON.stringify(L.slice(0,100)));
   } else {
     await loadRanking();
   }
-  alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
+  alert(`Parabéns ${name}! Dificuldade: ${currentDifficulty}. Tempo: ${formatTime(timer)}.`);
 }
 
-/* ---------- AUTENTICAÇÃO ---------- */
-// CORREÇÃO: Atualiza a variável global
+/* ---------- AUTENTICAÇÃO (MANTIDO) ---------- */
 async function fetchUserName(userId) {
-    const { data, error } = await supabaseWeb
-        .from('users')
-        .select('name')
-        .eq('id', userId)
-        .single();
-    
-    let userName = 'Anon';
-    if (error && error.code !== 'PGRST116') { 
-        console.error('Erro ao buscar nome do usuário:', error.message);
-    }
-    
-    if (data && data.name) { 
-        userName = data.name;
-    } 
-    
-    currentUserName = userName; // ATUALIZA VARIÁVEL GLOBAL
-    playerHUD.textContent = userName;
-    playerNameDisplay.textContent = userName; // CORRIGIDO: Atualiza o display na aba Início
-    chatNameDisplay.textContent = `@${userName}`; // CORRIGIDO: Atualiza o display na aba Chat
-    authPlayerNameInput.value = userName; // Preenche o campo na aba de Auth
+    const { data, error } = await supabaseWeb
+        .from('users')
+        .select('name')
+        .eq('id', userId)
+        .single();
+    
+    let userName = 'Anon';
+    if (error && error.code !== 'PGRST116') { 
+        console.error('Erro ao buscar nome do usuário:', error.message);
+    }
+    
+    if (data && data.name) { 
+        userName = data.name;
+    } 
+    
+    currentUserName = userName; // ATUALIZA VARIÁVEL GLOBAL
+    playerHUD.textContent = userName;
+    playerNameDisplay.textContent = userName; // Atualiza o display na aba Início
+    chatNameDisplay.textContent = `@${userName}`; // Atualiza o display na aba Chat
+    authPlayerNameInput.value = userName; // Preenche o campo na aba de Auth
 }
 
-// CORREÇÃO: Atualiza a variável global
 function updateAuthUI(user) {
-    if (user) {
-        authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
-        signOutBtn.style.display = 'block';
-        signUpBtn.style.display = 'none';
-        signInBtn.style.display = 'none';
-        
-        fetchUserName(user.id); 
+    if (user) {
+        authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
+        signOutBtn.style.display = 'block';
+        signUpBtn.style.display = 'none';
+        signInBtn.style.display = 'none';
+        
+        fetchUserName(user.id); 
 
-    } else {
-        authStateEl.textContent = 'Status: Desconectado';
-        signOutBtn.style.display = 'none';
-        signUpBtn.style.display = 'inline-block';
-        signInBtn.style.display = 'inline-block';
-        
-        currentUserName = 'Anon'; // ATUALIZA VARIÁVEL GLOBAL
-        playerHUD.textContent = 'Anon';
-        playerNameDisplay.textContent = 'Anon'; // CORRIGIDO: Atualiza o display na aba Início
-        chatNameDisplay.textContent = `@Anon`; // CORRIGIDO: Atualiza o display na aba Chat
-        authPlayerNameInput.value = ''; // Limpa o campo de input na aba de Auth
-    }
+    } else {
+        authStateEl.textContent = 'Status: Desconectado';
+        signOutBtn.style.display = 'none';
+        signUpBtn.style.display = 'inline-block';
+        signInBtn.style.display = 'inline-block';
+        
+        currentUserName = 'Anon'; // ATUALIZA VARIÁVEL GLOBAL
+        playerHUD.textContent = 'Anon';
+        playerNameDisplay.textContent = 'Anon'; // Atualiza o display na aba Início
+        chatNameDisplay.textContent = `@Anon`; // Atualiza o display na aba Chat
+        authPlayerNameInput.value = ''; // Limpa o campo de input na aba de Auth
+    }
 }
 
-// CORREÇÃO: Pega o nome do novo campo
 async function handleAuth(isSignUp) {
-    const emailEl = document.getElementById('userEmail');
-    const passwordEl = document.getElementById('userPassword');
-    const playerName = authPlayerNameInput.value.trim(); // PEGA O NOME DA ABA DE AUTH
-    
-    const email = emailEl.value.trim();
-    const password = passwordEl.value.trim();
+    const emailEl = document.getElementById('userEmail');
+    const passwordEl = document.getElementById('userPassword');
+    const playerName = authPlayerNameInput.value.trim(); // PEGA O NOME DA ABA DE AUTH
+    
+    const email = emailEl.value.trim();
+    const password = passwordEl.value.trim();
 
-    if (!email || !password) {
-        alert('Por favor, preencha E-mail e Senha.');
-        return;
-    }
-    // Para cadastro, o nome não pode ser vazio
-    if (isSignUp && !playerName) {
-        alert('Por favor, defina um nome de usuário.');
-        return;
-    }
+    if (!email || !password) {
+        alert('Por favor, preencha E-mail e Senha.');
+        return;
+    }
+    // Para cadastro, o nome não pode ser vazio
+    if (isSignUp && !playerName) {
+        alert('Por favor, defina um nome de usuário.');
+        return;
+    }
 
-    let authResult;
+    let authResult;
 
-    if (isSignUp) {
-        authResult = await supabaseWeb.auth.signUp({ email, password });
-    } else {
-        authResult = await supabaseWeb.auth.signInWithPassword({ email, password });
-    }
+    if (isSignUp) {
+        authResult = await supabaseWeb.auth.signUp({ email, password });
+    } else {
+        authResult = await supabaseWeb.auth.signInWithPassword({ email, password });
+    }
 
-    if (authResult.error) {
-        alert(`Erro de autenticação: ${authResult.error.message}`);
-        return;
-    }
-    
-    if (authResult.data.user) {
-        const userId = authResult.data.user.id;
-        // Salva o nome na tabela users
-        // Se for login, o nome já existe (ou será 'Anon' se não tiver no DB), 
-        // mas o upsert garante que, se o usuário alterar o campo de nome no login, ele será atualizado.
-        const { error: insertError } = await supabaseWeb
-            .from('users')
-            .upsert([{ id: userId, name: playerName || currentUserName }], { onConflict: 'id' }); 
-        
-        if (insertError) {
-             console.error('Erro ao salvar nome na tabela users:', insertError.message);
-        }
-    }
+    if (authResult.error) {
+        alert(`Erro de autenticação: ${authResult.error.message}`);
+        return;
+    }
+    
+    if (authResult.data.user) {
+        const userId = authResult.data.user.id;
+        const { error: insertError } = await supabaseWeb
+            .from('users')
+            .upsert([{ id: userId, name: playerName || currentUserName }], { onConflict: 'id' }); 
+        
+        if (insertError) {
+             console.error('Erro ao salvar nome na tabela users:', insertError.message);
+        }
+    }
 
-    if (isSignUp) {
-        alert(`Sucesso! Verifique seu e-mail para confirmar o cadastro.`);
-    }
+    if (isSignUp) {
+        alert(`Sucesso! Verifique seu e-mail para confirmar o cadastro.`);
+    }
 
-    supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
-    loadChat(); 
-    showTab('mainApp'); 
+    supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
+    loadChat(); 
+    showTab('mainApp'); 
 }
 
 async function handleSignOut() {
-    const { error } = await supabaseWeb.auth.signOut();
-    if (error) {
-        alert(`Erro ao sair: ${error.message}`);
-        return;
-    }
-    alert('Desconectado com sucesso!');
-    updateAuthUI(null);
-    loadChat(); 
+    const { error } = await supabaseWeb.auth.signOut();
+    if (error) {
+        alert(`Erro ao sair: ${error.message}`);
+        return;
+    }
+    alert('Desconectado com sucesso!');
+    updateAuthUI(null);
+    loadChat(); 
 }
 
-/* ---------- CHAT e RANKING (MANTIDOS, usando currentUserName) ---------- */
+/* ---------- CHAT e RANKING (MANTIDO) ---------- */
 async function loadChat(){
   // try API
   try{
@@ -505,15 +583,14 @@ function renderChat(list){
   chatWindow.innerHTML = '';
   list.slice(-200).forEach(it=>{
     const row = document.createElement('div'); row.className='chat-row';
-    const msgText = it.message || it.msg || ''; 
+    const msgText = it.message || it.msg || ''; 
     row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(msgText)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
     chatWindow.appendChild(row);
   });
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// CORREÇÃO: Usa a variável global currentUserName
-async function sendChat() { 
+async function sendChat() { 
   // Pega o nome da variável global (não de um input)
   const name = (currentUserName || 'Anon').slice(0, 30);
   const msg = (chatMsg.value || '').trim();
@@ -527,31 +604,31 @@ async function sendChat() {
     return;
   }
   const currentUserId = session.user.id;
-  const accessToken = session.access_token; 
+  const accessToken = session.access_token; 
 
-  const payload = { 
-    name, 
-    message: msg, 
-    user_id: currentUserId 
+  const payload = { 
+    name, 
+    message: msg, 
+    user_id: currentUserId 
   };
-  
+  
   try {
-    const res = await fetch(API_CHAT, { 
-      method: 'POST', 
+    const res = await fetch(API_CHAT, { 
+      method: 'POST', 
       headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${accessToken}` 
-        }, 
-      body: JSON.stringify(payload) 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}` 
+        }, 
+      body: JSON.stringify(payload) 
     });
 
     if (res.ok) {
       chatMsg.value = '';
       chatNotice.textContent = 'Mensagem enviada';
-      loadChat(); 
-      return; 
+      loadChat(); 
+      return; 
     }
-    chatNotice.textContent = `Erro ao enviar chat: ${res.statusText}`;
+    chatNotice.textContent = `Erro ao enviar chat: ${res.statusText}`;
 
   } catch(e) {
     const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
@@ -575,12 +652,15 @@ async function loadRanking(){
     }
   }catch(e){}
   apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-  renderRanking(local);
+  // Filtra o ranking local pela dificuldade atual para exibir apenas resultados relevantes
+  const allLocal = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
+  const localFiltered = allLocal.filter(r => r.difficulty === currentDifficulty);
+  renderRanking(localFiltered);
 }
+
 function renderRanking(list){
   leaderboardEl.innerHTML = '';
-  if(!list || list.length===0){ leaderboardEl.innerHTML = '<div style="color:var(--muted)">Nenhum score registrado.</div>'; return; }
+  if(!list || list.length===0){ leaderboardEl.innerHTML = '<div style="color:var(--muted)">Nenhum score registrado para esta dificuldade.</div>'; return; }
   list.slice(0,20).forEach((it, idx)=>{
     const row = document.createElement('div'); row.className='leader-row';
     row.innerHTML = `<div>${idx+1}. ${escapeHtml(it.name)}</div><div style="font-weight:900;color:var(--accent)">${formatTime(Math.round(it.time))}</div>`;
@@ -589,39 +669,70 @@ function renderRanking(list){
 }
 
 
-/* ---------- EVENTS ---------- */
-startBtn.addEventListener('click', ()=>{ createGrid(); computeCardSize(); });
-resetBtn.addEventListener('click', ()=>{ createGrid(); localStorage.removeItem(STORAGE_RANK); rankNotice.textContent='Ranking local limpo'; });
+/* ---------- EVENTOS (AJUSTADO) ---------- */
+// Handler para a mudança de dificuldade
+difficultySelect.addEventListener('change', (e) => {
+    currentDifficulty = e.target.value;
+    localStorage.setItem(STORAGE_DIFF, currentDifficulty);
+    computeCardSize(); // Recalcula o tamanho da carta
+    createGrid(); // Recria o grid
+    loadRanking(); // Recarrega o ranking filtrado pela nova dificuldade
+});
+
+startBtn.addEventListener('click', ()=>{ 
+    if(started) { // Reinicia o jogo no clique, se já estiver jogando
+        createGrid();
+    } else {
+        createGrid(); 
+    }
+    computeCardSize(); 
+});
+resetBtn.addEventListener('click', ()=>{ 
+    createGrid(); 
+    localStorage.removeItem(STORAGE_RANK); 
+    rankNotice.textContent='Ranking local limpo'; 
+});
 chatSend.addEventListener('click', ()=>{ sendChat(); });
 chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 refreshRank.addEventListener('click', ()=>loadRanking());
 clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
 
-// Conecta os novos botões de Abas e Autenticação
-signUpBtn.addEventListener('click', () => handleAuth(true)); 
+// Conecta os botões de Abas e Autenticação (mantido)
+signUpBtn.addEventListener('click', () => handleAuth(true)); 
 signInBtn.addEventListener('click', () => handleAuth(false));
 signOutBtn.addEventListener('click', handleSignOut);
 
 tabAppBtn.addEventListener('click', () => showTab('mainApp'));
-tabChatBtn.addEventListener('click', () => showTab('chatPanel')); 
-tabRankBtn.addEventListener('click', () => showTab('rankPanel')); 
+tabChatBtn.addEventListener('click', () => showTab('chatPanel')); 
+tabRankBtn.addEventListener('click', () => { 
+    showTab('rankPanel'); 
+    loadRanking(); // Garante o carregamento do ranking ao abrir a aba
+}); 
 tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
 
 
-/* ---------- INIT ---------- */
-createGrid(); 
-loadChat(); 
-loadRanking();
-setInterval(loadChat, POLL_CHAT_MS);
-setInterval(loadRanking, POLL_RANK_MS);
+/* ---------- INIT (AJUSTADO) ---------- */
+function init() {
+    // Aplica a dificuldade salva e calcula o tamanho da carta
+    difficultySelect.value = currentDifficulty;
+    computeCardSize(); 
+    createGrid(); 
+    
+    // Inicializa o estado de autenticação e carrega nome (assíncrono)
+    supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
 
-// Inicializa a aba principal
-showTab('mainApp'); 
+    // Carrega dados e configura polling
+    loadChat(); 
+    loadRanking();
+    setInterval(loadChat, POLL_CHAT_MS);
+    setInterval(loadRanking, POLL_RANK_MS);
 
-// Inicializa a UI de autenticação
-supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
+    // Garante que a primeira aba esteja ativa após o carregamento completo do DOM
+    showTab('mainApp'); 
+}
 
+// Garante que o INIT seja chamado após o DOM estar pronto
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
-
