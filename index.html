@@ -13,20 +13,8 @@
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018);font-family:'Press Start 2P', monospace;color:#eaf2ff;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
 
-/* CORREÇÃO: Controla a exibição do sidePanel no container */
-.container{max-width:1100px;margin:14px auto;padding:12px;display:grid;grid-template-columns:1fr 340px;gap:16px}
-@media(max-width:980px){.container{grid-template-columns:1fr}}
-#sidePanel:not(.active) {
-    display: none;
-}
-@media(max-width:980px){
-    /* Garante que no mobile o sidePanel é 100% da largura quando ativo */
-    #sidePanel.active {
-        display: flex;
-        flex-direction: column;
-    }
-}
-
+/* CORREÇÃO: Container principal com apenas uma coluna para as abas */
+.container{max-width:760px;margin:14px auto;padding:12px;display:grid;grid-template-columns:1fr;gap:16px}
 .panel{background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
 .header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
 .title{color:var(--accent);font-size:12px}
@@ -51,7 +39,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 .btn{background:var(--accent);color:#071018;border:none;padding:10px;border-radius:8px;font-weight:700;cursor:pointer}
 .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--accent)}
 
-.side-column{display:flex;flex-direction:column;gap:12px}
+/* Estilo do Chat e Ranking (Caixas) */
 .box{background:linear-gradient(180deg,#061018,#07101a);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);font-size:12px}
 .chat-window{height:300px;overflow:auto;padding:6px;border-radius:6px;background:linear-gradient(180deg,#041016,#051018)}
 .chat-row{margin-bottom:8px}
@@ -70,6 +58,11 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
     display: flex;
     gap: 8px;
     margin-bottom: 12px;
+    /* Faz o header da aba ocupar a largura total do panel */
+    margin: -14px -14px 12px -14px; 
+    padding: 14px 14px 0 14px;
+    background: var(--panel);
+    border-radius: 10px 10px 0 0;
 }
 .tab-btn {
     background: transparent;
@@ -84,14 +77,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 }
 .tab-btn.active {
     color: var(--accent);
-    background: var(--panel);
-}
-.tab-content {
-    padding: 8px;
-    border: 1px solid rgba(255,255,255,0.03);
-    border-radius: 0 0 10px 10px;
-    border-top: none; 
-    background: var(--panel);
+    background: var(--bg);
 }
 .tab-panel:not(.active) {
     display: none;
@@ -109,7 +95,9 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 
     <div class="tab-header">
         <button id="tabAppBtn" class="tab-btn">🕹️ Início</button>
-        <button id="tabAuthBtn" class="tab-btn">🔒 Login/Cadastro</button>
+        <button id="tabChatBtn" class="tab-btn">💬 Chat</button>
+        <button id="tabRankBtn" class="tab-btn">🏆 Ranking</button>
+        <button id="tabAuthBtn" class="tab-btn">🔒 Cadastro/Login</button>
     </div>
 
     <div id="mainApp" class="tab-panel">
@@ -141,17 +129,42 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
           </select>
           <button id="startBtn" class="btn">Start</button>
           <button id="resetBtn" class="btn ghost">Reset</button>
-          <button id="signOutBtnMobile" class="btn ghost" style="background: #a82e2e; color: white; display: none;">Sair</button>
         </div>
-
-        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
+        <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
+    </div>
+    
+    <div id="chatPanel" class="tab-panel">
+        <div class="box" style="margin-top: 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <strong style="color:var(--accent)">💬 Chat Global</strong>
+                <button id="clearChat" class="btn ghost" style="padding:6px">Limpar Local</button>
+            </div>
+            <div id="chatWindow" class="chat-window"></div>
+            <div style="display:flex;gap:8px;margin-top:8px">
+                <input id="chatName" class="input" placeholder="Seu nome" />
+                <input id="chatMsg" class="input" placeholder="Mensagem..." />
+                <button id="chatSend" class="btn">Enviar</button>
+            </div>
+            <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
+        </div>
     </div>
 
+    <div id="rankPanel" class="tab-panel">
+        <div class="box" style="margin-top: 0;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <strong style="color:var(--accent)">🏆 Ranking Global</strong>
+                <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
+            </div>
+            <div id="leaderboard"></div>
+            <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
+        </div>
+    </div>
+    
     <div id="authPanel" class="tab-panel">
         <div class="auth-controls">
             <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
             <div id="authState" class="chip" style="color: var(--accent2);">Status: Desconectado</div>
-            <p style="font-size: 11px; color: var(--muted); margin: 0;">*Se for cadastrar, o nome de usuário é o que está em "Início" (@seunome).</p>
+            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o que está em "Início" (@seunome).</p>
             <input id="userEmail" class="input" placeholder="E-mail" />
             <input id="userPassword" class="input" type="password" placeholder="Senha" />
             <div style="display:flex; gap: 8px;">
@@ -162,38 +175,12 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
         </div>
     </div>
   </div>
-
-    <div id="sidePanel" class="side-column">
-    <div class="box">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong style="color:var(--accent)">💬 Chat Global</strong>
-        <button id="clearChat" class="btn ghost" style="padding:6px">Limpar</button>
-      </div>
-      <div id="chatWindow" class="chat-window"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input id="chatName" class="input" placeholder="Seu nome" />
-        <input id="chatMsg" class="input" placeholder="Mensagem..." />
-        <button id="chatSend" class="btn">Enviar</button>
-      </div>
-      <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-    </div>
-
-    <div class="box">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong style="color:var(--accent)">🏆 Ranking Global</strong>
-        <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
-      </div>
-      <div id="leaderboard"></div>
-      <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-    </div>
-  </div>
 </div>
 <script type="module">
   // 1. Importa a biblioteca do Supabase
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
   // 2. Variáveis de conexão - SUBSTITUÍDAS COM SEUS VALORES
-  // MANTENHA O QUE ESTÁ ABAIXO SE VOCÊ JÁ TEM SEU PROJETO SUPABASE CONFIGURADO
   const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
 
@@ -235,18 +222,22 @@ const refreshRank = document.getElementById('refreshRank');
 const clearChatBtn = document.getElementById('clearChat');
 const rankNotice = document.getElementById('rankNotice');
 
-// Novos elementos de Auth e Abas
+// Elementos de Auth e Abas (REVISADOS)
 const authStateEl = document.getElementById('authState');
 const tabAppBtn = document.getElementById('tabAppBtn');
+const tabChatBtn = document.getElementById('tabChatBtn'); // Novo Botão
+const tabRankBtn = document.getElementById('tabRankBtn'); // Novo Botão
 const tabAuthBtn = document.getElementById('tabAuthBtn');
+
 const mainAppPanel = document.getElementById('mainApp');
+const chatPanel = document.getElementById('chatPanel'); // Novo Painel
+const rankPanel = document.getElementById('rankPanel'); // Novo Painel
 const authPanel = document.getElementById('authPanel');
+
+// O botão móvel de SignOut não é mais necessário, pois ele fica dentro da aba Cadastro/Login
+const signOutBtn = document.getElementById('signOutBtn'); 
 const signUpBtn = document.getElementById('signUpBtn');
 const signInBtn = document.getElementById('signInBtn');
-const signOutBtn = document.getElementById('signOutBtn');
-const signOutBtnMobile = document.getElementById('signOutBtnMobile');
-const sidePanel = document.getElementById('sidePanel');
-
 
 /* ---------- STATE ---------- */
 let cards = [], first=null, second=null, lock=false, matches=0, attempts=0;
@@ -273,32 +264,26 @@ function formatTime(s){const m=Math.floor(s/60); const sec=s%60; return `${Strin
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
 function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
-/* ---------- ABAS ---------- */
+/* ---------- ABAS (REVISADO) ---------- */
 function showTab(tabId) {
     document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
 
     document.getElementById(tabId).classList.add('active');
-    document.getElementById(`tab${tabId.charAt(0).toUpperCase() + tabId.slice(1)}Btn`).classList.add('active');
     
-    if (tabId === 'mainApp') {
-        sidePanel.classList.add('active');
-        // Usamos a session síncrona para verificar se o botão Sair deve aparecer no mobile
-        supabaseWeb.auth.getSession().then(({ data: { session } }) => {
-             if (session?.user && window.innerWidth <= 980) {
-                 signOutBtnMobile.style.display = 'block';
-             } else {
-                 signOutBtnMobile.style.display = 'none';
-             }
-        });
-        
-    } else {
-        sidePanel.classList.remove('active');
-        signOutBtnMobile.style.display = 'none';
+    // Mapeamento de ID do painel para ID do botão:
+    const btnMap = {
+        'mainApp': 'tabAppBtn',
+        'chatPanel': 'tabChatBtn',
+        'rankPanel': 'tabRankBtn',
+        'authPanel': 'tabAuthBtn'
+    };
+    if (btnMap[tabId]) {
+        document.getElementById(btnMap[tabId]).classList.add('active');
     }
 }
 
-/* ---------- GRID ---------- */
+/* ---------- GRID, GAME LOGIC, RANKING e CHAT (MANTIDOS) ---------- */
 function createGrid(){
   grid.innerHTML='';
   const arr = shuffle([...EMOJIS, ...EMOJIS]);
@@ -316,11 +301,9 @@ function createGrid(){
 }
 function resetHUD(){ attempts=0; matches=0; triesHUD.textContent='0'; stopTimer(); timer=0; timeHUD.textContent='00:00'; started=false; playerHUD.textContent = playerNameInput.value || 'Anon'; }
 
-/* ---------- TIMER ---------- */
 function startTimer(){ if(timerId) return; timerId = setInterval(()=>{ timer++; timeHUD.textContent = formatTime(timer); }, 1000); }
 function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
 
-/* ---------- GAME LOGIC ---------- */
 function onCardClick(e){
   if(lock) return;
   const c = e.currentTarget;
@@ -341,7 +324,6 @@ function checkMatch(){
   }
 }
 
-/* ---------- ON WIN: save local + try send to API (Ranking) ---------- */
 async function handleWin(){
   const name = (playerNameInput.value || 'Anon').slice(0,30);
   // save local best
@@ -365,9 +347,7 @@ async function handleWin(){
   alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
 }
 
-/* ---------- AUTENTICAÇÃO (LOGIN/CADASTRO) ---------- */
-
-// FUNÇÃO fetchUserName: Busca e preenche o nome do usuário
+/* ---------- AUTENTICAÇÃO (MANTIDO) ---------- */
 async function fetchUserName(userId) {
     const { data, error } = await supabaseWeb
         .from('users')
@@ -376,7 +356,6 @@ async function fetchUserName(userId) {
         .single();
     
     let userName = 'Anon';
-    // PGRST116: Nenhum resultado encontrado. Isso é normal se o usuário acabou de cadastrar
     if (error && error.code !== 'PGRST116') { 
         console.error('Erro ao buscar nome do usuário:', error.message);
     }
@@ -385,33 +364,26 @@ async function fetchUserName(userId) {
         userName = data.name;
     } 
     
-    // 2. Preenche todos os campos relevantes
     playerNameInput.value = userName;
     playerHUD.textContent = userName;
     chatName.value = userName; 
 }
 
-// FUNÇÃO updateAuthUI: Atualiza a interface
 function updateAuthUI(user) {
     if (user) {
         authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
         signOutBtn.style.display = 'block';
-        // Atualiza a visibilidade do botão móvel
-        signOutBtnMobile.style.display = window.innerWidth <= 980 ? 'block' : 'none';
         signUpBtn.style.display = 'none';
         signInBtn.style.display = 'none';
         
-        // Chamada para preencher o nome
         fetchUserName(user.id); 
 
     } else {
         authStateEl.textContent = 'Status: Desconectado';
         signOutBtn.style.display = 'none';
-        signOutBtnMobile.style.display = 'none';
         signUpBtn.style.display = 'inline-block';
         signInBtn.style.display = 'inline-block';
         
-        // Limpa e define 'Anon' nos campos quando desconectado
         playerNameInput.value = 'Anon';
         playerHUD.textContent = 'Anon';
         chatName.value = 'Anon';
@@ -448,7 +420,6 @@ async function handleAuth(isSignUp) {
         const userId = authResult.data.user.id;
         const { error: insertError } = await supabaseWeb
             .from('users')
-            // O upsert garante que ele insere se não existir ou atualiza se já existir
             .upsert([{ id: userId, name: playerName }], { onConflict: 'id' }); 
         
         if (insertError) {
@@ -456,12 +427,10 @@ async function handleAuth(isSignUp) {
         }
     }
 
-    // Alerta específico para cadastro. Para login, o alerta é ignorado.
     if (isSignUp) {
         alert(`Sucesso! Verifique seu e-mail para confirmar o cadastro.`);
     }
 
-    // Atualiza a UI após login/cadastro.
     supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(session?.user));
     loadChat(); 
     showTab('mainApp'); 
@@ -478,7 +447,7 @@ async function handleSignOut() {
     loadChat(); 
 }
 
-/* ---------- CHAT (Integração Supabase) ---------- */
+/* ---------- CHAT (MANTIDO) ---------- */
 async function loadChat(){
   // try API
   try{
@@ -505,27 +474,21 @@ function renderChat(list){
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// FUNÇÃO sendChat: Correção final para garantir o reconhecimento da sessão
 async function sendChat() { 
-  // 1. DEFINE AS VARIÁVEIS (NAME e MSG)
   const name = (chatName.value || playerNameInput.value || 'Anon').slice(0, 30);
   const msg = (chatMsg.value || '').trim();
 
   if (!msg) return;
 
-  // 2. PEGA A SESSÃO DO USUÁRIO
-  // getSession() é mais confiável para pegar o token atual
   const { data: { session }, error: sessionError } = await supabaseWeb.auth.getSession();
 
-  // VERIFICAÇÃO CRÍTICA: Se não houver sessão válida, bloqueia o envio
   if (sessionError || !session || !session.user) {
     chatNotice.textContent = 'ERRO: Você deve estar logado para enviar mensagens!';
     return;
   }
   const currentUserId = session.user.id;
-  const accessToken = session.access_token; // O token de acesso para autenticar na API
+  const accessToken = session.access_token; 
 
-  // 3. CRIA O PAYLOAD
   const payload = { 
     name, 
     message: msg, 
@@ -537,7 +500,6 @@ async function sendChat() {
       method: 'POST', 
       headers: {
             'Content-Type': 'application/json',
-            // Envia o token para que a API verifique a autenticidade
             'Authorization': `Bearer ${accessToken}` 
         }, 
       body: JSON.stringify(payload) 
@@ -549,11 +511,9 @@ async function sendChat() {
       loadChat(); 
       return; 
     }
-    // Trata erros de resposta da API
     chatNotice.textContent = `Erro ao enviar chat: ${res.statusText}`;
 
   } catch(e) {
-    // FALLBACK LOCAL (se a API estiver totalmente indisponível)
     const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
     local.push({ name, msg, at: Date.now() });
     localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
@@ -564,7 +524,7 @@ async function sendChat() {
 }
 
 
-/* ---------- RANKING ---------- */
+/* ---------- RANKING (MANTIDO) ---------- */
 async function loadRanking(){
   try{
     const res = await fetch(API_RANKING);
@@ -598,12 +558,14 @@ chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 refreshRank.addEventListener('click', ()=>loadRanking());
 clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
 
-// Conecta os botões de Autenticação e Abas
+// Conecta os novos botões de Abas
 signUpBtn.addEventListener('click', () => handleAuth(true)); 
 signInBtn.addEventListener('click', () => handleAuth(false));
 signOutBtn.addEventListener('click', handleSignOut);
-signOutBtnMobile.addEventListener('click', handleSignOut);
+
 tabAppBtn.addEventListener('click', () => showTab('mainApp'));
+tabChatBtn.addEventListener('click', () => showTab('chatPanel')); // Novo Evento
+tabRankBtn.addEventListener('click', () => showTab('rankPanel')); // Novo Evento
 tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
 
 
