@@ -486,30 +486,68 @@ async function handleSignOut() {
 }
 
 /* ---------- CHAT e RANKING (MANTIDOS, usando currentUserName) ---------- */
-async function loadChat(){
-  // try API
-  try{
-    const res = await fetch(API_CHAT);
-    if(res.ok){
-      const data = await res.json();
-      renderChat(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-  renderChat(local);
-}
-function renderChat(list){
-  chatWindow.innerHTML = '';
-  list.slice(-200).forEach(it=>{
-    const row = document.createElement('div'); row.className='chat-row';
-    const msgText = it.message || it.msg || ''; 
-    row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(msgText)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
-    chatWindow.appendChild(row);
-  });
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+// Localize e substitua esta função COMPLETA
+async function sendChat() { 
+    const name = (currentUserName || 'Anon').slice(0, 30);
+    const msg = (chatMsg.value || '').trim();
+
+    if (!msg) return;
+
+    // 1. OBTÉM A SESSÃO E O TOKEN DE ACESSO DO USUÁRIO
+    const { data: { session }, error: sessionError } = await supabaseWeb.auth.getSession();
+
+    if (sessionError || !session || !session.user) {
+        chatNotice.textContent = 'ERRO: Você deve estar logado para enviar mensagens!';
+        return; 
+    }
+    
+    const currentUserId = session.user.id;
+    const accessToken = session.access_token; // <--- CHAVE PARA AUTENTICAR NA EDGE FUNCTION
+
+    const payload = { 
+        name, 
+        message: msg, 
+        user_id: currentUserId 
+    };
+     
+    let sent = false;
+
+    try {
+        const res = await fetch(API_CHAT, { 
+            method: 'POST', 
+            headers: {
+                'Content-Type': 'application/json',
+                // 2. ENVIA O TOKEN NO HEADER DE AUTORIZAÇÃO
+                'Authorization': `Bearer ${accessToken}` 
+            }, 
+            body: JSON.stringify(payload) 
+        });
+
+        if (res.ok) {
+            sent = true;
+            chatMsg.value = '';
+            chatNotice.textContent = 'Mensagem enviada';
+            await loadChat(); 
+        } else {
+            const errorText = await res.text();
+            console.error('API Chat Error:', res.status, errorText);
+            chatNotice.textContent = `Erro ao enviar chat: Falha na API (${res.status})`;
+        }
+
+    } catch(e) {
+        console.error('Network Error:', e);
+        chatNotice.textContent = 'Erro de rede. Tentando salvar localmente...';
+    }
+    
+    // Fallback Local se o envio global falhar
+    if (!sent) {
+        const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+        local.push({ name, msg, at: Date.now() });
+        localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
+        chatMsg.value = '';
+        chatNotice.textContent = 'Chat offline - mensagem salva localmente';
+        loadChat();
+    }
 }
 
 // CORREÇÃO: Usa a variável global currentUserName
@@ -624,3 +662,4 @@ supabaseWeb.auth.getSession().then(({ data: { session } }) => updateAuthUI(sessi
 </script>
 </body>
 </html>
+
