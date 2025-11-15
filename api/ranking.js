@@ -1,26 +1,33 @@
-// /api/ranking.js
-// Ranking global simples + nome exclusivo por IP
+// ranking.js (Nova Versão com Supabase)
 
-let scores = [];           // { name, time, at }
-let nameToIP = {};         // { name: ip }
+// Altere o caminho se o seu arquivo supabaseClient.js estiver em outro lugar
+import { supabase } from '../lib/supabaseClient'; 
 
-function getIP(req) {
-  return (
-    req.headers["x-forwarded-for"] ||
-    req.socket.remoteAddress ||
-    "unknown"
-  );
-}
-
-export default function handler(req, res) {
+export default async function handler(req, res) { 
   try {
     // ===========================
     // GET LISTAR RANKING
     // ===========================
     if (req.method === "GET") {
-      const top = scores
-        .sort((a, b) => a.time - b.time)
-        .slice(0, 100);
+      const { data, error } = await supabase
+        .from('ranking')
+        .select(`
+          score,
+          users (
+            name      // Puxa o nome do usuário da tabela 'users'
+          )
+        `)
+        .order('score', { ascending: true }) 
+        .limit(100);
+
+      if (error) throw error;
+
+      // Formata a lista para retornar { name, time }
+      const top = data.map(item => ({
+        name: item.users.name,
+        time: item.score, 
+        at: new Date().getTime() // A data exata pode ser ajustada
+      }));
 
       return res.status(200).json(top);
     }
@@ -29,35 +36,27 @@ export default function handler(req, res) {
     // POST REGISTRAR TEMPO
     // ===========================
     if (req.method === "POST") {
-      const { name, time } = req.body || {};
-      if (!name || time == null) {
-        return res.status(400).json({ error: "missing fields" });
+      // ATENÇÃO: Seu jogo AGORA precisa enviar o 'user_id' do Supabase no corpo da requisição POST
+      const { name, time, user_id } = req.body || {}; 
+      
+      if (!name || time == null || !user_id) {
+        // Agora exigimos o user_id para registrar no Supabase
+        return res.status(400).json({ error: "missing fields (name, time, user_id)" });
       }
 
-      const cleanName = String(name).trim().slice(0, 30);
-      const ip = getIP(req);
+      // 1. INSERE/ATUALIZA o registro na tabela 'ranking'
+      const { data, error } = await supabase
+        .from('ranking')
+        .upsert([
+          { 
+            user_id: user_id, // Usamos a coluna correta user_id
+            score: time 
+          }
+        ], { onConflict: 'user_id' }); // Atualiza se já existir pontuação para este usuário
 
-      // conferir se o nome já pertence a outro IP
-      const existingIP = nameToIP[cleanName];
-      if (existingIP && existingIP !== ip) {
-        return res.status(409).json({
-          error: "name_taken",
-          msg: "Esse nome já está sendo usado."
-        });
-      }
-
-      // registrar nome → ip
-      if (!existingIP) {
-        nameToIP[cleanName] = ip;
-      }
-
-      scores.push({
-        name: cleanName,
-        time,
-        at: Date.now()
-      });
-
-      return res.status(200).json({ ok: true });
+      if (error) throw error;
+      
+      return res.status(200).json({ ok: true, data });
     }
 
     res.setHeader("Allow", "GET, POST");
@@ -65,6 +64,6 @@ export default function handler(req, res) {
 
   } catch (err) {
     console.error("ranking error", err);
-    return res.status(500).json({ error: "internal" });
+    return res.status(500).json({ error: "internal", detail: err.message });
   }
 }
