@@ -7,8 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#071017; --panel:#0e1622; --accent:#ffd166; --accent2:#7ce7c7; --muted:#9aa7bf;
-  --gap:10px; --cols:4; --card-max:96px;
+  --bg:#071017; --panel:#0e1622; --accent:#ffd166; --accent2:#7ce7c7; --muted:#9aa7bf;
+  --gap:10px; --cols:4; --card-max:96px;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018);font-family:'Press Start 2P', monospace;color:#eaf2ff;-webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale}
@@ -50,87 +50,86 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 /* small */
 .footer{font-size:11px;color:var(--muted);text-align:center;margin-top:8px}
 @media (max-width:520px){
-  :root{--cols:3}
+  :root{--cols:3}
 }
 </style>
 </head>
 <body>
 <div class="container">
-  <div class="panel">
-    <div class="header">
-      <div>
-        <div class="title">PIXEL RPG MEMORY</div>
-        <div class="sub">Pixel-art moderno • Mobile-first</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
-      </div>
-    </div>
+  <div class="panel">
+    <div class="header">
+      <div>
+        <div class="title">PIXEL RPG MEMORY</div>
+        <div class="sub">Pixel-art moderno • Mobile-first</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:10px;color:var(--muted)">API: <span id="apiStatus">verificando…</span></div>
+      </div>
+    </div>
 
-    <div class="hud">
-      <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
-      <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
-      <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
-      <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
-    </div>
+    <div class="hud">
+      <div class="chip">Jogador: <span id="playerHUD">Anon</span></div>
+      <div class="chip">Tempo: <span id="timeHUD">00:00</span></div>
+      <div class="chip">Tentativas: <span id="triesHUD">0</span></div>
+      <div class="chip">Melhor: <span id="bestHUD">--:--</span></div>
+    </div>
 
-    <div id="grid" class="grid"></div>
+    <div id="grid" class="grid"></div>
 
-    <div class="controls">
-      <input id="playerName" class="input" placeholder="@seunome" />
-      <select id="skinSelect" class="input">
-        <option value="plain">Classic</option>
-        <option value="darker">Darker</option>
-        <option value="neon">Neon</option>
-      </select>
-      <button id="startBtn" class="btn">Start</button>
-      <button id="resetBtn" class="btn ghost">Reset</button>
-    </div>
+    <div class="controls">
+      <input id="playerName" class="input" placeholder="@seunome" />
+      <select id="skinSelect" class="input">
+        <option value="plain">Classic</option>
+        <option value="darker">Darker</option>
+        <option value="neon">Neon</option>
+      </select>
+      <button id="startBtn" class="btn">Start</button>
+      <button id="resetBtn" class="btn ghost">Reset</button>
+    </div>
 
-    <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
-  </div>
+    <div class="footer">Toque nas cartas para virar — objetivo: terminar no menor tempo</div>
+  </div>
 
-  <div class="side-column">
-    <div class="box">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong style="color:var(--accent)">💬 Chat Global</strong>
-        <button id="clearChat" class="btn ghost" style="padding:6px">Limpar</button>
-      </div>
-      <div id="chatWindow" class="chat-window"></div>
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <input id="chatName" class="input" placeholder="Seu nome" />
-        <input id="chatMsg" class="input" placeholder="Mensagem..." />
-        <button id="chatSend" class="btn">Enviar</button>
-      </div>
-      <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-    </div>
+  <div class="side-column">
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="color:var(--accent)">💬 Chat Global</strong>
+        <button id="clearChat" class="btn ghost" style="padding:6px">Limpar</button>
+      </div>
+      <div id="chatWindow" class="chat-window"></div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <input id="chatName" class="input" placeholder="Seu nome" />
+        <input id="chatMsg" class="input" placeholder="Mensagem..." />
+        <button id="chatSend" class="btn">Enviar</button>
+      </div>
+      <div id="chatNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
+    </div>
 
-    <div class="box">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <strong style="color:var(--accent)">🏆 Ranking Global</strong>
-        <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
-      </div>
-      <div id="leaderboard"></div>
-      <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
-    </div>
-  </div>
+    <div class="box">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong style="color:var(--accent)">🏆 Ranking Global</strong>
+        <div><button id="refreshRank" class="btn ghost">Atualizar</button></div>
+      </div>
+      <div id="leaderboard"></div>
+      <div id="rankNotice" style="margin-top:8px;color:var(--muted);font-size:11px"></div>
+    </div>
+  </div>
 </div>
 <script type="module">
-  // 1. Importa a biblioteca do Supabase
-  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
+  // 1. Importa a biblioteca do Supabase
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm';
 
-  // 2. Variáveis de conexão - SUBSTITUA ESTES VALORES!
-  const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
+  // 2. Variáveis de conexão - SUBSTITUA ESTES VALORES!
+  const SUPABASE_URL = 'https://qkezkaiormdbmknisqdp.supabase.co'; 
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFrZXprYWlvcm1kYm1rbmlzcWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMxNjc0NDgsImV4cCI6MjA3ODc0MzQ0OH0.6kDMREZKD6z-ryyxP58ezqINhcZXZaR41cgPsdvRswo'; 
 
-  // 3. Inicializa a conexão (Web Client)
-  const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  
-  // ----------------------------------------------------
-  // O restante do seu código JavaScript vem AQUI
-  // (incluindo a função handleWin que corrigimos)
-  // ----------------------------------------------------
-  
+  // 3. Inicializa a conexão (Web Client)
+  const supabaseWeb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  // ----------------------------------------------------
+  // CONFIGURAÇÕES E VARIÁVEIS
+  // ----------------------------------------------------
+  
 const API_CHAT = '/api/chat';
 const API_RANKING = '/api/ranking';
 const POLL_CHAT_MS = 2000;
@@ -170,14 +169,14 @@ if(bestLocal) bestHUD.textContent = formatTime(bestLocal);
 
 /* ---------- RESPONSIVE CARD SIZE ---------- */
 function computeCardSize(){
-  // calculate columns based on viewport width
-  const containerWidth = Math.min(window.innerWidth - 40, 720); // keep some margin
-  const cols = window.innerWidth <= 520 ? 3 : 4;
-  document.documentElement.style.setProperty('--cols', cols);
-  const gap = 10;
-  const w = Math.floor((containerWidth - (cols-1)*gap - 16) / cols);
-  const size = Math.max(56, Math.min(w, 110));
-  document.documentElement.style.setProperty('--card-size', size + 'px');
+  // calculate columns based on viewport width
+  const containerWidth = Math.min(window.innerWidth - 40, 720); // keep some margin
+  const cols = window.innerWidth <= 520 ? 3 : 4;
+  document.documentElement.style.setProperty('--cols', cols);
+  const gap = 10;
+  const w = Math.floor((containerWidth - (cols-1)*gap - 16) / cols);
+  const size = Math.max(56, Math.min(w, 110));
+  document.documentElement.style.setProperty('--card-size', size + 'px');
 }
 window.addEventListener('resize', computeCardSize);
 computeCardSize();
@@ -185,22 +184,23 @@ computeCardSize();
 /* ---------- UTIL ---------- */
 function formatTime(s){const m=Math.floor(s/60); const sec=s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
 function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 /* ---------- GRID ---------- */
 function createGrid(){
-  grid.innerHTML='';
-  const arr = shuffle([...EMOJIS, ...EMOJIS]);
-  cards = [];
-  arr.forEach((emoji,idx)=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.dataset.emoji = emoji;
-    card.innerHTML = `<div class="card-inner"><div class="face front">?</div><div class="face back">${emoji}</div></div>`;
-    card.addEventListener('click', onCardClick);
-    grid.appendChild(card);
-    cards.push(card);
-  });
-  resetHUD();
+  grid.innerHTML='';
+  const arr = shuffle([...EMOJIS, ...EMOJIS]);
+  cards = [];
+  arr.forEach((emoji,idx)=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.emoji = emoji;
+    card.innerHTML = `<div class="card-inner"><div class="face front">?</div><div class="face back">${emoji}</div></div>`;
+    card.addEventListener('click', onCardClick);
+    grid.appendChild(card);
+    cards.push(card);
+  });
+  resetHUD();
 }
 function resetHUD(){ attempts=0; matches=0; triesHUD.textContent='0'; stopTimer(); timer=0; timeHUD.textContent='00:00'; started=false; playerHUD.textContent = playerNameInput.value || 'Anon'; }
 
@@ -210,171 +210,151 @@ function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
 
 /* ---------- GAME LOGIC ---------- */
 function onCardClick(e){
-  if(lock) return;
-  const c = e.currentTarget;
-  if(c.classList.contains('flipped')) return;
-  if(!started){ started=true; startTimer(); }
-  c.classList.add('flipped');
-  if(!first) first=c;
-  else { second=c; lock=true; attempts++; triesHUD.textContent=attempts; setTimeout(checkMatch, 500); }
+  if(lock) return;
+  const c = e.currentTarget;
+  if(c.classList.contains('flipped')) return;
+  if(!started){ started=true; startTimer(); }
+  c.classList.add('flipped');
+  if(!first) first=c;
+  else { second=c; lock=true; attempts++; triesHUD.textContent=attempts; setTimeout(checkMatch, 500); }
 }
 function checkMatch(){
-  if(first.dataset.emoji === second.dataset.emoji){
-    matches++; first.classList.add('matched'); second.classList.add('matched');
-    [first,second]=[null,null]; lock=false;
-    if(matches === EMOJIS.length){ stopTimer(); handleWin(); }
-  } else {
-    first.classList.remove('flipped'); second.classList.remove('flipped');
-    [first,second]=[null,null]; lock=false;
-  }
+  if(first.dataset.emoji === second.dataset.emoji){
+    matches++; first.classList.add('matched'); second.classList.add('matched');
+    [first,second]=[null,null]; lock=false;
+    if(matches === EMOJIS.length){ stopTimer(); handleWin(); }
+  } else {
+    first.classList.remove('flipped'); second.classList.remove('flipped');
+    [first,second]=[null,null]; lock=false;
+  }
 }
 
-/* ---------- ON WIN: save local + try send to API ---------- */
+/* ---------- ON WIN: save local + try send to API (Ranking) ---------- */
 async function handleWin(){
-  const name = (playerNameInput.value || 'Anon').slice(0,30);
-  // save local best
-  if(!bestLocal || timer < bestLocal){ bestLocal = timer; localStorage.setItem(STORAGE_BEST, String(bestLocal)); bestHUD.textContent = formatTime(bestLocal); }
-  // attempt to send ranking
-  const payload = { name, time: timer };
-  let sent = false;
-  try{
-    const res = await fetch(API_RANKING, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
-    if(res.ok){ sent = true; rankNotice.textContent = 'Tempo enviado ao ranking global!'; }
-  }catch(e){ rankNotice.textContent = 'Ranking offline — salvo localmente'; }
-  if(!sent){
-    // fallback local store
-    const L = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-    L.push({ name, time: timer, at: Date.now() });
-    L.sort((a,b)=>a.time - b.time);
-    localStorage.setItem(STORAGE_RANK, JSON.stringify(L.slice(0,100)));
-  } else {
-    await loadRanking();
-  }
-  alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
+  const name = (playerNameInput.value || 'Anon').slice(0,30);
+  // save local best
+  if(!bestLocal || timer < bestLocal){ bestLocal = timer; localStorage.setItem(STORAGE_BEST, String(bestLocal)); bestHUD.textContent = formatTime(bestLocal); }
+  // attempt to send ranking
+  const payload = { name, time: timer };
+  let sent = false;
+  try{
+    const res = await fetch(API_RANKING, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if(res.ok){ sent = true; rankNotice.textContent = 'Tempo enviado ao ranking global!'; }
+  }catch(e){ rankNotice.textContent = 'Ranking offline — salvo localmente'; }
+  if(!sent){
+    // fallback local store
+    const L = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
+    L.push({ name, time: timer, at: Date.now() });
+    L.sort((a,b)=>a.time - b.time);
+    localStorage.setItem(STORAGE_RANK, JSON.stringify(L.slice(0,100)));
+  } else {
+    await loadRanking();
+  }
+  alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
 }
 
-/* ---------- CHAT ---------- */
+/* ---------- CHAT (Integração Supabase) ---------- */
 async function loadChat(){
-  // try API
-  try{
-    const res = await fetch(API_CHAT);
-    if(res.ok){
-      const data = await res.json();
-      renderChat(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-  renderChat(local);
+  // try API
+  try{
+    const res = await fetch(API_CHAT);
+    if(res.ok){
+      const data = await res.json();
+      renderChat(data);
+      apiStatus.textContent = 'online';
+      return;
+    }
+  }catch(e){}
+  apiStatus.textContent = 'offline (local)';
+  const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+  renderChat(local);
 }
 function renderChat(list){
-  chatWindow.innerHTML = '';
-  list.slice(-200).forEach(it=>{
-    const row = document.createElement('div'); row.className='chat-row';
-    row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(it.msg)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
-    chatWindow.appendChild(row);
-  });
-  chatWindow.scrollTop = chatWindow.scrollHeight;
+  chatWindow.innerHTML = '';
+  list.slice(-200).forEach(it=>{
+    const row = document.createElement('div'); row.className='chat-row';
+    // CORREÇÃO: Usa it.message se it.msg não existir (para compatibilidade com a API)
+    const msgText = it.message || it.msg || ''; 
+    row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(msgText)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
+    chatWindow.appendChild(row);
+  });
+  chatWindow.scrollTop = chatWindow.scrollHeight;
 }
-async function sendChat(){
-  const name = (chatName.value || playerNameInput.value || 'Anon').slice(0,30);
-  const msg = (chatMsg.value || '').trim();
- // Sua função que lida com o envio da mensagem (Ex: sendChatMessage ou handleChatPost)
-async function suaFuncaoDeChat() { 
-  // O código aqui deve pegar 'name' e 'msg' do seu formulário/campo de texto
-  // ... (código existente para pegar 'name' e 'msg')
 
-  if (!msg) return;
-
-  // ==========================================================
-  // ⚡ CORREÇÃO CRÍTICA: Pegar o ID do usuário logado
-  // ==========================================================
-  const { data: { user }, error: userError } = await supabaseWeb.auth.getUser();
-
-  if (userError || !user) {
-    chatNotice.textContent = 'ERRO: Faça login para enviar mensagens!';
-    return;
-  }
-  const currentUserId = user.id;
-
- // SUBSTITUA O CÓDIGO DA FUNÇÃO sendChat() COMPLETO POR ESTE:
-
+// ⚡ FUNÇÃO sendChat CORRIGIDA
 async function sendChat() { 
-  // 1. DEFINE AS VARIÁVEIS (NAME e MSG)
-  const name = (chatName.value || playerNameInput.value || 'Anon').slice(0, 30);
-  const msg = (chatMsg.value || '').trim();
+  // 1. DEFINE AS VARIÁVEIS (NAME e MSG)
+  const name = (chatName.value || playerNameInput.value || 'Anon').slice(0, 30);
+  const msg = (chatMsg.value || '').trim();
 
-  if (!msg) return;
+  if (!msg) return;
 
-  // 2. PEGA O ID DO USUÁRIO
-  const { data: { user }, error: userError } = await supabaseWeb.auth.getUser();
+  // 2. PEGA O ID DO USUÁRIO
+  const { data: { user }, error: userError } = await supabaseWeb.auth.getUser();
 
-  if (userError || !user) {
-    chatNotice.textContent = 'ERRO: Faça login para enviar mensagens!';
-    return;
-  }
-  const currentUserId = user.id;
+  if (userError || !user) {
+    chatNotice.textContent = 'ERRO: Faça login para enviar mensagens!';
+    return;
+  }
+  const currentUserId = user.id;
 
-  // 3. CRIA O PAYLOAD CORRIGIDO
-  const payload = { 
-    name, 
-    message: msg, // <-- Corrigido para 'message'
-    user_id: currentUserId 
-  };
-  
-  try {
-    const res = await fetch(API_CHAT, { 
-      method: 'POST', 
-      headers: {'Content-Type': 'application/json'}, 
-      body: JSON.stringify(payload) 
-    });
+  // 3. CRIA O PAYLOAD CORRIGIDO
+  const payload = { 
+    name, 
+    message: msg, // <-- O NOME CORRETO PARA O BACK-END
+    user_id: currentUserId 
+  };
+  
+  try {
+    const res = await fetch(API_CHAT, { 
+      method: 'POST', 
+      headers: {'Content-Type': 'application/json'}, 
+      body: JSON.stringify(payload) 
+    });
 
-    if (res.ok) {
-      chatMsg.value = '';
-      chatNotice.textContent = 'Mensagem enviada';
-      loadChat(); 
-      return; 
-    }
-  } catch(e) {
-    // FALLBACK LOCAL
-    const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
-    local.push({ name, msg, at: Date.now() });
-    localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
-    chatMsg.value = '';
-    chatNotice.textContent = 'Chat offline - mensagem salva localmente';
-    loadChat();
-  }
+    if (res.ok) {
+      chatMsg.value = '';
+      chatNotice.textContent = 'Mensagem enviada';
+      loadChat(); 
+      return; 
+    }
+  } catch(e) {
+    // FALLBACK LOCAL
+    const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
+    local.push({ name, msg, at: Date.now() });
+    localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
+    chatMsg.value = '';
+    chatNotice.textContent = 'Chat offline - mensagem salva localmente';
+    loadChat();
+  }
 }
+
 
 /* ---------- RANKING ---------- */
 async function loadRanking(){
-  try{
-    const res = await fetch(API_RANKING);
-    if(res.ok){
-      const data = await res.json();
-      renderRanking(data);
-      apiStatus.textContent = 'online';
-      return;
-    }
-  }catch(e){}
-  apiStatus.textContent = 'offline (local)';
-  const local = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
-  renderRanking(local);
+  try{
+    const res = await fetch(API_RANKING);
+    if(res.ok){
+      const data = await res.json();
+      renderRanking(data);
+      apiStatus.textContent = 'online';
+      return;
+    }
+  }catch(e){}
+  apiStatus.textContent = 'offline (local)';
+  const local = JSON.parse(localStorage.getItem(STORAGE_RANK) || '[]');
+  renderRanking(local);
 }
 function renderRanking(list){
-  leaderboardEl.innerHTML = '';
-  if(!list || list.length===0){ leaderboardEl.innerHTML = '<div style="color:var(--muted)">Nenhum score registrado.</div>'; return; }
-  list.slice(0,20).forEach((it, idx)=>{
-    const row = document.createElement('div'); row.className='leader-row';
-    row.innerHTML = `<div>${idx+1}. ${escapeHtml(it.name)}</div><div style="font-weight:900;color:var(--accent)">${formatTime(Math.round(it.time))}</div>`;
-    leaderboardEl.appendChild(row);
-  });
+  leaderboardEl.innerHTML = '';
+  if(!list || list.length===0){ leaderboardEl.innerHTML = '<div style="color:var(--muted)">Nenhum score registrado.</div>'; return; }
+  list.slice(0,20).forEach((it, idx)=>{
+    const row = document.createElement('div'); row.className='leader-row';
+    row.innerHTML = `<div>${idx+1}. ${escapeHtml(it.name)}</div><div style="font-weight:900;color:var(--accent)">${formatTime(Math.round(it.time))}</div>`;
+    leaderboardEl.appendChild(row);
+  });
 }
 
-/* ---------- UTIL ---------- */
-function escapeHtml(s){return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 /* ---------- EVENTS ---------- */
 startBtn.addEventListener('click', ()=>{ createGrid(); computeCardSize(); });
@@ -391,7 +371,3 @@ setInterval(loadRanking, POLL_RANK_MS);
 </script>
 </body>
 </html>
-
-
-
-
