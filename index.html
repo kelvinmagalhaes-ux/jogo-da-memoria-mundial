@@ -121,8 +121,7 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
         <div id="grid" class="grid"></div>
 
         <div class="controls">
-          <input id="playerName" class="input" placeholder="@seunome" />
-          <select id="skinSelect" class="input">
+                <select id="skinSelect" class="input">
             <option value="plain">Classic</option>
             <option value="darker">Darker</option>
             <option value="neon">Neon</option>
@@ -164,9 +163,12 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
         <div class="auth-controls">
             <h3 class="title" style="margin-top: 0; margin-bottom: 0">Acessar Conta</h3>
             <div id="authState" class="chip" style="color: var(--accent2);">Status: Desconectado</div>
-            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o que está em "Início" (@seunome).</p>
+            <p style="font-size: 11px; color: var(--muted); margin: 0;">*O nome de usuário é o nome que você salvará no Supabase.</p>
             <input id="userEmail" class="input" placeholder="E-mail" />
             <input id="userPassword" class="input" type="password" placeholder="Senha" />
+            
+            <input id="authPlayerName" class="input" placeholder="@seunome (Obrigatório para login)" />
+
             <div style="display:flex; gap: 8px;">
                 <button id="signInBtn" class="btn" style="flex:1">Login</button>
                 <button id="signUpBtn" class="btn ghost" style="flex:1">Cadastrar</button>
@@ -204,7 +206,7 @@ const STORAGE_BEST = 'prm_best_v1';
 const grid = document.getElementById('grid');
 const startBtn = document.getElementById('startBtn');
 const resetBtn = document.getElementById('resetBtn');
-const playerNameInput = document.getElementById('playerName');
+// REMOVIDO: const playerNameInput = document.getElementById('playerName'); // Este ID não existe mais
 const playerHUD = document.getElementById('playerHUD');
 const timeHUD = document.getElementById('timeHUD');
 const triesHUD = document.getElementById('triesHUD');
@@ -222,24 +224,27 @@ const refreshRank = document.getElementById('refreshRank');
 const clearChatBtn = document.getElementById('clearChat');
 const rankNotice = document.getElementById('rankNotice');
 
-// Elementos de Auth e Abas (REVISADOS)
+// Elementos de Auth e Abas
 const authStateEl = document.getElementById('authState');
 const tabAppBtn = document.getElementById('tabAppBtn');
-const tabChatBtn = document.getElementById('tabChatBtn'); // Novo Botão
-const tabRankBtn = document.getElementById('tabRankBtn'); // Novo Botão
+const tabChatBtn = document.getElementById('tabChatBtn'); 
+const tabRankBtn = document.getElementById('tabRankBtn'); 
 const tabAuthBtn = document.getElementById('tabAuthBtn');
 
 const mainAppPanel = document.getElementById('mainApp');
-const chatPanel = document.getElementById('chatPanel'); // Novo Painel
-const rankPanel = document.getElementById('rankPanel'); // Novo Painel
+const chatPanel = document.getElementById('chatPanel'); 
+const rankPanel = document.getElementById('rankPanel'); 
 const authPanel = document.getElementById('authPanel');
 
-// O botão móvel de SignOut não é mais necessário, pois ele fica dentro da aba Cadastro/Login
 const signOutBtn = document.getElementById('signOutBtn'); 
 const signUpBtn = document.getElementById('signUpBtn');
 const signInBtn = document.getElementById('signInBtn');
+// NOVO: Campo de nome na aba de Autenticação
+const authPlayerNameInput = document.getElementById('authPlayerName'); 
 
 /* ---------- STATE ---------- */
+// VARIÁVEL GLOBAL PARA ARMAZENAR O NOME ATUAL
+let currentUserName = 'Anon'; 
 let cards = [], first=null, second=null, lock=false, matches=0, attempts=0;
 let timer=0, timerId=null, started=false;
 let bestLocal = localStorage.getItem(STORAGE_BEST) ? parseInt(localStorage.getItem(STORAGE_BEST)) : null;
@@ -271,7 +276,6 @@ function showTab(tabId) {
 
     document.getElementById(tabId).classList.add('active');
     
-    // Mapeamento de ID do painel para ID do botão:
     const btnMap = {
         'mainApp': 'tabAppBtn',
         'chatPanel': 'tabChatBtn',
@@ -299,7 +303,8 @@ function createGrid(){
   });
   resetHUD();
 }
-function resetHUD(){ attempts=0; matches=0; triesHUD.textContent='0'; stopTimer(); timer=0; timeHUD.textContent='00:00'; started=false; playerHUD.textContent = playerNameInput.value || 'Anon'; }
+// CORREÇÃO: Usa a variável global currentUserName
+function resetHUD(){ attempts=0; matches=0; triesHUD.textContent='0'; stopTimer(); timer=0; timeHUD.textContent='00:00'; started=false; playerHUD.textContent = currentUserName || 'Anon'; }
 
 function startTimer(){ if(timerId) return; timerId = setInterval(()=>{ timer++; timeHUD.textContent = formatTime(timer); }, 1000); }
 function stopTimer(){ if(timerId){ clearInterval(timerId); timerId=null; } }
@@ -324,8 +329,9 @@ function checkMatch(){
   }
 }
 
+// CORREÇÃO: Usa a variável global currentUserName
 async function handleWin(){
-  const name = (playerNameInput.value || 'Anon').slice(0,30);
+  const name = (currentUserName || 'Anon').slice(0,30);
   // save local best
   if(!bestLocal || timer < bestLocal){ bestLocal = timer; localStorage.setItem(STORAGE_BEST, String(bestLocal)); bestHUD.textContent = formatTime(bestLocal); }
   // attempt to send ranking
@@ -347,7 +353,8 @@ async function handleWin(){
   alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
 }
 
-/* ---------- AUTENTICAÇÃO (MANTIDO) ---------- */
+/* ---------- AUTENTICAÇÃO ---------- */
+// CORREÇÃO: Atualiza a variável global
 async function fetchUserName(userId) {
     const { data, error } = await supabaseWeb
         .from('users')
@@ -364,11 +371,13 @@ async function fetchUserName(userId) {
         userName = data.name;
     } 
     
-    playerNameInput.value = userName;
+    currentUserName = userName; // ATUALIZA VARIÁVEL GLOBAL
     playerHUD.textContent = userName;
     chatName.value = userName; 
+    authPlayerNameInput.value = userName; // Preenche o campo na aba de Auth
 }
 
+// CORREÇÃO: Atualiza a variável global
 function updateAuthUI(user) {
     if (user) {
         authStateEl.innerHTML = `Logado como: ${user.email.split('@')[0]}`;
@@ -384,22 +393,29 @@ function updateAuthUI(user) {
         signUpBtn.style.display = 'inline-block';
         signInBtn.style.display = 'inline-block';
         
-        playerNameInput.value = 'Anon';
+        currentUserName = 'Anon'; // ATUALIZA VARIÁVEL GLOBAL
         playerHUD.textContent = 'Anon';
         chatName.value = 'Anon';
+        authPlayerNameInput.value = 'Anon'; // Limpa o campo na aba de Auth
     }
 }
 
+// CORREÇÃO: Pega o nome do novo campo
 async function handleAuth(isSignUp) {
     const emailEl = document.getElementById('userEmail');
     const passwordEl = document.getElementById('userPassword');
-    const playerName = document.getElementById('playerName').value || 'Anon'; 
+    const playerName = authPlayerNameInput.value || 'Anon'; // PEGA O NOME DA ABA DE AUTH
     
     const email = emailEl.value;
     const password = passwordEl.value;
 
     if (!email || !password) {
         alert('Por favor, preencha E-mail e Senha.');
+        return;
+    }
+    // Para cadastro/login, o nome não pode ser 'Anon'
+    if (playerName === 'Anon') {
+        alert('Por favor, defina um nome de usuário.');
         return;
     }
 
@@ -418,6 +434,7 @@ async function handleAuth(isSignUp) {
     
     if (authResult.data.user) {
         const userId = authResult.data.user.id;
+        // Sempre salva o nome na tabela users
         const { error: insertError } = await supabaseWeb
             .from('users')
             .upsert([{ id: userId, name: playerName }], { onConflict: 'id' }); 
@@ -447,7 +464,7 @@ async function handleSignOut() {
     loadChat(); 
 }
 
-/* ---------- CHAT (MANTIDO) ---------- */
+/* ---------- CHAT e RANKING (MANTIDOS, usando currentUserName) ---------- */
 async function loadChat(){
   // try API
   try{
@@ -474,8 +491,9 @@ function renderChat(list){
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
+// CORREÇÃO: Usa a variável global currentUserName
 async function sendChat() { 
-  const name = (chatName.value || playerNameInput.value || 'Anon').slice(0, 30);
+  const name = (chatName.value || currentUserName || 'Anon').slice(0, 30);
   const msg = (chatMsg.value || '').trim();
 
   if (!msg) return;
@@ -524,7 +542,6 @@ async function sendChat() {
 }
 
 
-/* ---------- RANKING (MANTIDO) ---------- */
 async function loadRanking(){
   try{
     const res = await fetch(API_RANKING);
@@ -558,14 +575,14 @@ chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 refreshRank.addEventListener('click', ()=>loadRanking());
 clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
 
-// Conecta os novos botões de Abas
+// Conecta os novos botões de Abas e Autenticação
 signUpBtn.addEventListener('click', () => handleAuth(true)); 
 signInBtn.addEventListener('click', () => handleAuth(false));
 signOutBtn.addEventListener('click', handleSignOut);
 
 tabAppBtn.addEventListener('click', () => showTab('mainApp'));
-tabChatBtn.addEventListener('click', () => showTab('chatPanel')); // Novo Evento
-tabRankBtn.addEventListener('click', () => showTab('rankPanel')); // Novo Evento
+tabChatBtn.addEventListener('click', () => showTab('chatPanel')); 
+tabRankBtn.addEventListener('click', () => showTab('rankPanel')); 
 tabAuthBtn.addEventListener('click', () => showTab('authPanel'));
 
 
