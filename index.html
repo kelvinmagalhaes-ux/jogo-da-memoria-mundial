@@ -78,6 +78,10 @@ html,body{height:100%;margin:0;background:linear-gradient(180deg,#04101a,#071018
 
     <div class="controls">
       <input id="playerName" class="input" placeholder="@seunome" />
+      <input id="userEmail" class="input" placeholder="E-mail" />
+      <input id="userPassword" class="input" type="password" placeholder="Senha" />
+      <button id="signUpBtn" class="btn ghost">Cadastrar</button>
+      <button id="signInBtn" class="btn">Login</button>
       <select id="skinSelect" class="input">
         <option value="plain">Classic</option>
         <option value="darker">Darker</option>
@@ -253,6 +257,55 @@ async function handleWin(){
   alert(`Parabéns ${name}! Tempo: ${formatTime(timer)}.`);
 }
 
+/* ---------- AUTENTICAÇÃO (LOGIN/CADASTRO) ---------- */
+async function handleAuth(isSignUp) {
+    const emailEl = document.getElementById('userEmail');
+    const passwordEl = document.getElementById('userPassword');
+    const playerName = document.getElementById('playerName').value || 'Anon';
+    
+    const email = emailEl.value;
+    const password = passwordEl.value;
+
+    if (!email || !password) {
+        alert('Por favor, preencha E-mail e Senha.');
+        return;
+    }
+
+    let authResult;
+
+    if (isSignUp) {
+        // Tenta CADASTRAR (Sign Up)
+        authResult = await supabaseWeb.auth.signUp({ email, password });
+    } else {
+        // Tenta FAZER LOGIN (Sign In)
+        authResult = await supabaseWeb.auth.signInWithPassword({ email, password });
+    }
+
+    if (authResult.error) {
+        alert(`Erro de autenticação: ${authResult.error.message}`);
+        return;
+    }
+
+    // Se for cadastro (Sign Up) e for bem-sucedido, insere o NOME do jogador na tabela 'users'
+    if (isSignUp && authResult.data.user) {
+        const userId = authResult.data.user.id;
+        // NOTA: Esta inserção pode falhar se o RLS for muito restritivo.
+        // Se falhar, você deve usar a API do Vercel para inserir o nome,
+        // mas vamos tentar diretamente no Front-End para simplicidade.
+        const { error: insertError } = await supabaseWeb
+            .from('users')
+            .insert([{ id: userId, name: playerName }]);
+        
+        if (insertError) {
+             console.error('Erro ao salvar nome na tabela users:', insertError.message);
+        }
+    }
+
+    alert(`Sucesso! Usuário logado: ${email}`);
+    // Recarrega o chat para tentar enviar mensagens
+    loadChat(); 
+}
+
 /* ---------- CHAT (Integração Supabase) ---------- */
 async function loadChat(){
   // try API
@@ -273,7 +326,7 @@ function renderChat(list){
   chatWindow.innerHTML = '';
   list.slice(-200).forEach(it=>{
     const row = document.createElement('div'); row.className='chat-row';
-    // CORREÇÃO: Usa it.message se it.msg não existir (para compatibilidade com a API)
+    // CORREÇÃO: Usa it.message ou it.msg (para compatibilidade com a API)
     const msgText = it.message || it.msg || ''; 
     row.innerHTML = `<span class="chat-name">${escapeHtml(it.name)}</span>: ${escapeHtml(msgText)} <span class="chat-time">${new Date(it.at||Date.now()).toLocaleTimeString()}</span>`;
     chatWindow.appendChild(row);
@@ -281,7 +334,7 @@ function renderChat(list){
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-// ⚡ FUNÇÃO sendChat CORRIGIDA
+// FUNÇÃO sendChat CORRIGIDA
 async function sendChat() { 
   // 1. DEFINE AS VARIÁVEIS (NAME e MSG)
   const name = (chatName.value || playerNameInput.value || 'Anon').slice(0, 30);
@@ -363,6 +416,10 @@ chatSend.addEventListener('click', ()=>{ sendChat(); });
 chatMsg.addEventListener('keydown', (e)=>{ if(e.key==='Enter') sendChat(); });
 refreshRank.addEventListener('click', ()=>loadRanking());
 clearChatBtn.addEventListener('click', ()=>{ localStorage.removeItem(STORAGE_CHAT); loadChat(); });
+
+// Conecta os novos botões de Autenticação
+document.getElementById('signUpBtn').addEventListener('click', () => handleAuth(true)); 
+document.getElementById('signInBtn').addEventListener('click', () => handleAuth(false));
 
 /* ---------- INIT ---------- */
 createGrid(); loadChat(); loadRanking();
