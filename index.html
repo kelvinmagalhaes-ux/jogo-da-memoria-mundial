@@ -299,11 +299,7 @@ async function suaFuncaoDeChat() {
   }
   const currentUserId = user.id;
 
-  const payload = { 
-    name, 
-    msg, 
-    user_id: currentUserId // <-- Adicionamos o ID de usuário aqui!
-  };
+  const payload = { name, message: msg, user_id: currentUserId };
   
   try {
     const res = await fetch(API_CHAT, { 
@@ -374,5 +370,6 @@ setInterval(loadRanking, POLL_RANK_MS);
 </script>
 </body>
 </html>
+
 
 
