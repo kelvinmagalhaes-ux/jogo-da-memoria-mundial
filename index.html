@@ -299,7 +299,30 @@ async function suaFuncaoDeChat() {
   }
   const currentUserId = user.id;
 
-  const payload = { name, message: msg, user_id: currentUserId };
+ // SUBSTITUA O CÓDIGO DA FUNÇÃO sendChat() COMPLETO POR ESTE:
+
+async function sendChat() { 
+  // 1. DEFINE AS VARIÁVEIS (NAME e MSG)
+  const name = (chatName.value || playerNameInput.value || 'Anon').slice(0, 30);
+  const msg = (chatMsg.value || '').trim();
+
+  if (!msg) return;
+
+  // 2. PEGA O ID DO USUÁRIO
+  const { data: { user }, error: userError } = await supabaseWeb.auth.getUser();
+
+  if (userError || !user) {
+    chatNotice.textContent = 'ERRO: Faça login para enviar mensagens!';
+    return;
+  }
+  const currentUserId = user.id;
+
+  // 3. CRIA O PAYLOAD CORRIGIDO
+  const payload = { 
+    name, 
+    message: msg, // <-- Corrigido para 'message'
+    user_id: currentUserId 
+  };
   
   try {
     const res = await fetch(API_CHAT, { 
@@ -315,8 +338,7 @@ async function suaFuncaoDeChat() {
       return; 
     }
   } catch(e) {
-    // ... (restante do seu fallback local)
-    // fallback local
+    // FALLBACK LOCAL
     const local = JSON.parse(localStorage.getItem(STORAGE_CHAT) || '[]');
     local.push({ name, msg, at: Date.now() });
     localStorage.setItem(STORAGE_CHAT, JSON.stringify(local.slice(-500)));
@@ -324,7 +346,6 @@ async function suaFuncaoDeChat() {
     chatNotice.textContent = 'Chat offline - mensagem salva localmente';
     loadChat();
   }
-}
 }
 
 /* ---------- RANKING ---------- */
@@ -370,6 +391,7 @@ setInterval(loadRanking, POLL_RANK_MS);
 </script>
 </body>
 </html>
+
 
 
 
